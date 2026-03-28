@@ -1,0 +1,66 @@
+name: CI
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build_extension:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ghidra: ['11.2', '11.2.1', '11.3', '11.3.1', '11.3.2', '11.4', '11.4.1', '11.4.2', '12.0']
+        java:   ['21']
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get short SHA
+        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: temurin
+
+      - name: Setup Ghidra
+        uses: er28-0652/setup-ghidra@master
+        with:
+          version: ${{ matrix.ghidra }}
+
+      - name: bodge
+        run: chmod +x gradlew
+
+      - name: Build Extension
+        run: ./gradlew
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ps3GhidraScripts_${{ matrix.ghidra }}
+          path: dist
+          retention-days: 7
+          if-no-files-found: error
+
+  push_release:
+    if: |
+      github.event_name == 'push' &&
+      github.repository == 'clienthax/Ps3GhidraScripts'
+    needs: build_extension
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create 1.0${{ GITHUB.RUN_NUMBER }} artifacts/*.zip --target ${{ GITHUB.SHA }} -t 1.0${{ GITHUB.RUN_NUMBER }}

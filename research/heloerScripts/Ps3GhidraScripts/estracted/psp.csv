@@ -1,0 +1,8 @@
+"Defined","Location","Label","Code Unit","String View","String Type","Length","Is Word"
+"","0002bed8","s_msg_connect_from_psp_see_manual_0002bed8","ds \"msg_connect_from_psp_see_manual\"","\"msg_connect_from_psp_see_manual\"","string","32","true"
+"","0002bef8","s_msg_connect_from_psp_0002bef8","ds \"msg_connect_from_psp\"","\"msg_connect_from_psp\"","string","21","true"
+"","0002bf10","s_msg_psp_connection_running_0002bf10","ds \"msg_psp_connection_running\"","\"msg_psp_connection_running\"","string","27","true"
+"","0002bf30","s_msg_connect_from_psp_turn_off_au_0002bf30","ds \"msg_connect_from_psp_turn_off_auto\"","\"msg_connect_from_psp_turn_off_auto\"","string","35","true"
+"","0002bf88","s_msg_remoteplay_register_psp_pls_0002bf88","ds \"msg_remoteplay_register_psp_pls\"","\"msg_remoteplay_register_psp_pls\"","string","32","true"
+"","0002c050","s_msg_psp_connection_0002c050","ds \"msg_psp_connection\"","\"msg_psp_connection\"","string","19","true"
+"","0002c948","s_PREMO-PSPID_0002c948","ds \"PREMO-PSPID\"","\"PREMO-PSPID\"","string","12","true"

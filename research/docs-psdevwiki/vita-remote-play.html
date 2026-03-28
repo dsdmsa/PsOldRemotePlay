@@ -1,0 +1,1004 @@
+
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<title>Remote Play - Vita Developer wiki</title>
+<script>document.documentElement.className="client-js";RLCONF={"wgBreakFrames":false,"wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgRequestId":"562fe85d03165cfaf1288d33","wgCSPNonce":false,"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Remote_Play","wgTitle":"Remote Play","wgCurRevisionId":6026,"wgRevisionId":6026,"wgArticleId":312,"wgIsArticle":true,"wgIsRedirect":false,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["Software","Main"],"wgPageContentLanguage":"en","wgPageContentModel":"wikitext","wgRelevantPageName":"Remote_Play","wgRelevantArticleId":312,"wgIsProbablyEditable":true,"wgRelevantPageIsProbablyEditable":true,"wgRestrictionEdit":[],"wgRestrictionMove":[],"wgVisualEditor":{"pageLanguageCode":"en","pageLanguageDir":"ltr",
+"pageVariantFallbacks":"en"},"simpleBatchUploadMaxFilesPerBatch":{"*":1000},"wgVector2022PreviewPages":[],"wgEditSubmitButtonLabelPublish":false};RLSTATE={"site.styles":"ready","user.styles":"ready","user":"ready","user.options":"loading","skins.vector.styles.legacy":"ready","jquery.tablesorter.styles":"ready","ext.visualEditor.desktopArticleTarget.noscript":"ready","ext.CookieWarning.styles":"ready","oojs-ui-core.styles":"ready","oojs-ui.styles.indicators":"ready","mediawiki.widgets.styles":"ready","oojs-ui-core.icons":"ready","ext.DarkMode.styles":"ready"};RLPAGEMODULES=["site","mediawiki.page.ready","jquery.tablesorter","mediawiki.toc","skins.vector.legacy.js","ext.visualEditor.desktopArticleTarget.init","ext.visualEditor.targetLoader","ext.CookieWarning","ext.DarkMode","ext.moderation.notify","ext.moderation.notify.desktop","ext.moderation.ve","ext.moderation.ajaxhook"];</script>
+<script>(RLQ=window.RLQ||[]).push(function(){mw.loader.implement("user.options@12s5i",function($,jQuery,require,module){mw.user.tokens.set({"patrolToken":"+\\","watchToken":"+\\","csrfToken":"+\\"});});});</script>
+<link rel="stylesheet" href="/vita/load.php?lang=en&amp;modules=ext.CookieWarning.styles%7Cext.DarkMode.styles%7Cext.visualEditor.desktopArticleTarget.noscript%7Cjquery.tablesorter.styles%7Cmediawiki.widgets.styles%7Coojs-ui-core.icons%2Cstyles%7Coojs-ui.styles.indicators%7Cskins.vector.styles.legacy&amp;only=styles&amp;skin=vector"/>
+<script async="" src="/vita/load.php?lang=en&amp;modules=startup&amp;only=scripts&amp;raw=1&amp;skin=vector"></script>
+<style>:root { --sdm-accent: gold; }</style>
+<meta name="ResourceLoaderDynamicStyles" content=""/>
+<link rel="stylesheet" href="/vita/load.php?lang=en&amp;modules=site.styles&amp;only=styles&amp;skin=vector"/>
+<meta name="generator" content="MediaWiki 1.39.6"/>
+<meta name="format-detection" content="telephone=no"/>
+<meta name="description" content="Playstation Development Wiki - PS5, PS4, PS3, PS2, PS1, PSP, Vita Information"/>
+<meta name="viewport" content="width=device-width, initial-scale=0.5"/>
+<meta name="viewport" content="width=1000"/>
+<link rel="alternate" type="application/x-wiki" title="Edit" href="/vita/edit/Remote_Play"/>
+<link rel="icon" href="/favicon.ico"/>
+<link rel="search" type="application/opensearchdescription+xml" href="/vita/opensearch_desc.php" title="Vita Developer wiki (en)"/>
+<link rel="EditURI" type="application/rsd+xml" href="https://www.psdevwiki.com/vita/api.php?action=rsd"/>
+<link rel="license" href="https://www.gnu.org/licenses/old-licenses/fdl-1.2.txt" />
+<link rel="alternate" type="application/atom+xml" title="Vita Developer wiki Atom feed" href="/vita/index.php?title=Special:RecentChanges&amp;feed=atom"/>
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject mw-editable page-Remote_Play rootpage-Remote_Play skin-vector action-view skin-vector-legacy vector-feature-language-in-header-enabled vector-feature-language-in-main-page-header-disabled vector-feature-language-alert-in-sidebar-disabled vector-feature-sticky-header-disabled vector-feature-sticky-header-edit-disabled vector-feature-table-of-contents-disabled vector-feature-visual-enhancement-next-disabled"><a href="https://www.psdevwiki.com/cdn-cgi/content?id=NZ6goyNhOJwtWCBmnJNBKPiEtmPrEPddRfx9G04WgMU-1774629172.5444908-1.0.1.1-LdkSrdHzIjbPfYmvVVV.Jt.fdnx55Kr.2sFolc0lOvs" aria-hidden="true" rel="nofollow noopener" style="display: none !important; visibility: hidden !important"></a><div id="mw-page-base" class="noprint"></div>
+<div id="mw-head-base" class="noprint"></div>
+<div id="content" class="mw-body" role="main">
+	<a id="top"></a>
+	<div id="siteNotice"></div>
+	<div class="mw-indicators">
+	</div>
+	<h1 id="firstHeading" class="firstHeading mw-first-heading"><span class="mw-page-title-main">Remote Play</span></h1>
+	<div id="bodyContent" class="vector-body">
+		<div id="siteSub" class="noprint">From Vita Developer wiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" class="mw-body-content mw-content-ltr" lang="en" dir="ltr"><div class="mw-parser-output"><p><br />
+You can use your PSVita system to remotely control a PS3/PS4 system.
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading"><input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none" /><div class="toctitle" lang="en" dir="ltr"><h2 id="mw-toc-heading">Contents</h2><span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#PS4"><span class="tocnumber">1</span> <span class="toctext">PS4</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#PS3"><span class="tocnumber">2</span> <span class="toctext">PS3</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#PS3_firmware_updates_related_to_Remote_Play"><span class="tocnumber">2.1</span> <span class="toctext">PS3 firmware updates related to Remote Play</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Description"><span class="tocnumber">2.2</span> <span class="toctext">Description</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#PS3-PlayStation_Vita_Remote_Play_capabilities"><span class="tocnumber">2.3</span> <span class="toctext">PS3-PlayStation Vita Remote Play capabilities</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Usage"><span class="tocnumber">2.4</span> <span class="toctext">Usage</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="#Remote_Play_attributes_in_SFO"><span class="tocnumber">2.5</span> <span class="toctext">Remote Play attributes in SFO</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#Remote_Play_PS3-PSVita_compatibility"><span class="tocnumber">2.6</span> <span class="toctext">Remote Play PS3-PSVita compatibility</span></a>
+<ul>
+<li class="toclevel-3 tocsection-9"><a href="#Remote_Play_compatibility_table"><span class="tocnumber">2.6.1</span> <span class="toctext">Remote Play compatibility table</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href="#Issues_/_workarounds_/_tips"><span class="tocnumber">2.6.2</span> <span class="toctext">Issues / workarounds / tips</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h1><span class="mw-headline" id="PS4">PS4</span><span class="mw-editsection"><span class="mw-editsection-bracket">[</span><a href="/vita/index.php?title=Remote_Play&amp;veaction=edit&amp;section=1" class="mw-editsection-visualeditor" title="Edit section: PS4">edit</a><span class="mw-editsection-divider"> | </span><a href="/vita/edit/Remote_Play?section=1" title="Edit section: PS4">edit source</a><span class="mw-editsection-bracket">]</span></span></h1>
+<ul><li><a target="_blank" rel="nofollow noreferrer noopener" class="external free" href="http://manuals.playstation.net/document/gb/psvita/ps4link/index.html">http://manuals.playstation.net/document/gb/psvita/ps4link/index.html</a></li></ul>
+<h1><span class="mw-headline" id="PS3">PS3</span><span class="mw-editsection"><span class="mw-editsection-bracket">[</span><a href="/vita/index.php?title=Remote_Play&amp;veaction=edit&amp;section=2" class="mw-editsection-visualeditor" title="Edit section: PS3">edit</a><span class="mw-editsection-divider"> | </span><a href="/vita/edit/Remote_Play?section=2" title="Edit section: PS3">edit source</a><span class="mw-editsection-bracket">]</span></span></h1>
+<h2><span class="mw-headline" id="PS3_firmware_updates_related_to_Remote_Play">PS3 firmware updates related to Remote Play</span><span class="mw-editsection"><span class="mw-editsection-bracket">[</span><a href="/vita/index.php?title=Remote_Play&amp;veaction=edit&amp;section=3" class="mw-editsection-visualeditor" title="Edit section: PS3 firmware updates related to Remote Play">edit</a><span class="mw-editsection-divider"> | </span><a href="/vita/edit/Remote_Play?section=3" title="Edit section: PS3 firmware updates related to Remote Play">edit source</a><span class="mw-editsection-bracket">]</span></span></h2>
+<ul><li>1.60 Remoteplay added over LAN for PSP 3.10</li>
+<li>1.80 Remoteplay over WAN added for PSP 3.50</li>
+<li>2.00 Remote Start function added, to switch PS3 on/off with PSP</li>
+<li>2.80 Open Remote Play exploit/homebrew on non Sony devices removed</li>
+<li>3.30 Sony Vaio laptops added to Remote Play devices</li>
+<li>4.00 PS Vita System added to Remote Play devices: <a target="_blank" rel="nofollow noreferrer noopener" class="external free" href="https://blog.eu.playstation.com/2011/11/30/ps3-system-software-update-v-4-00/">http://blog.eu.playstation.com/2011/11/30/ps3-system-software-update-v-4-00/</a></li></ul>
+<h2><span class="mw-headline" id="Description">Description</span><span class="mw-editsection"><span class="mw-editsection-bracket">[</span><a href="/vita/index.php?title=Remote_Play&amp;veaction=edit&amp;section=4" class="mw-editsection-visualeditor" title="Edit section: Description">edit</a><span class="mw-editsection-divider"> | </span><a href="/vita/edit/Remote_Play?section=4" title="Edit section: Description">edit source</a><span class="mw-editsection-bracket">]</span></span></h2>
+<p>This feature allows interaction with the Playstation XMB as well as supported PS3 Games/Software and PS1 games.
+</p><p>A few settings on XMB are hidden during Remote Play or cannot be accessed.
+</p><p>PS3 can provide video and sound to the device or only video to the device when your PS3 audio is output to monitor or audio system.
+</p><p>PS3 20GB CECHB00 models (and others but unreleased models) can be used if they are using a wired connection to a wireless router even though the internal Wifi hardware is missing.
+</p>
+<h2><span class="mw-headline" id="PS3-PlayStation_Vita_Remote_Play_capabilities">PS3-PlayStation Vita Remote Play capabilities</span><span class="mw-editsection"><span class="mw-editsection-bracket">[</span><a href="/vita/index.php?title=Remote_Play&amp;veaction=edit&amp;section=5" class="mw-editsection-visualeditor" title="Edit section: PS3-PlayStation Vita Remote Play capabilities">edit</a><span class="mw-editsection-divider"> | </span><a href="/vita/edit/Remote_Play?section=5" title="Edit section: PS3-PlayStation Vita Remote Play capabilities">edit source</a><span class="mw-editsection-bracket">]</span></span></h2>
+<p>During TGS 2011 Sony showed off a number of examples of how the new device can interact with the PlayStation 3:
+</p>
+<ul><li>Killzone 3 and little big planet 2 were streamed into the device from a PlayStation 3 unit,</li></ul>
+<p>noting how a few of the Dual Shock buttons missing on the Vita are mapped to the touchscreen. 
+</p>
+<ul><li>A Vita streaming movie content from Japan-only PS3 TV recorder Torne.</li></ul>
+<p>Note: 
+</p>
+<ul><li>it is possible to pair PSVita with a PS3 on lower Firmware than 4.00 (e.g 3.41/3.55) by pairing as mobile phone / PC / PSP</li></ul>
+<h2><span class="mw-headline" id="Usage">Usage</span><span class="mw-editsection"><span class="mw-editsection-bracket">[</span><a href="/vita/index.php?title=Remote_Play&amp;veaction=edit&amp;section=6" class="mw-editsection-visualeditor" title="Edit section: Usage">edit</a><span class="mw-editsection-divider"> | </span><a href="/vita/edit/Remote_Play?section=6" title="Edit section: Usage">edit source</a><span class="mw-editsection-bracket">]</span></span></h2>
+<ul><li><a target="_blank" rel="nofollow noreferrer noopener" class="external free" href="http://manuals.playstation.net/document/gb/psvita/remoteplay/index.html">http://manuals.playstation.net/document/gb/psvita/remoteplay/index.html</a></li></ul>
+<p>Operating the PS3™ system's PS button:
+</p><p>This replicates the action of pushing the PS button on the PS3™ system's wireless controller.
+</p><p>1. Tap the screen.
+</p><p>2. Select (PS). 
+</p>
+<h2><span class="mw-headline" id="Remote_Play_attributes_in_SFO">Remote Play attributes in SFO</span><span class="mw-editsection"><span class="mw-editsection-bracket">[</span><a href="/vita/index.php?title=Remote_Play&amp;veaction=edit&amp;section=7" class="mw-editsection-visualeditor" title="Edit section: Remote Play attributes in SFO">edit</a><span class="mw-editsection-divider"> | </span><a href="/vita/edit/Remote_Play?section=7" title="Edit section: Remote Play attributes in SFO">edit source</a><span class="mw-editsection-bracket">]</span></span></h2>
+<ul><li>PSVITA/PSP: <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://en.wikipedia.org/wiki/M4V">M4V</a> (480x272)</li></ul>
+<p>Attribute on PS3 SFO&#160;: 1 (0x01) = flag n1
+</p>
+<ul><li>PSVITA/PSP: <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://en.wikipedia.org/wiki/H.264/MPEG-4_AVC">AVC</a> (480x272)</li></ul>
+<p>Attribute on PS3 SFO&#160;: 5 (0x05) = flag n3
+</p>
+<ul><li>PSVITA: <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="https://en.wikipedia.org/wiki/480P">480p</a> (852x480) &amp; PSP: (480x272):</li></ul>
+<p>Attribute on PS3 SFO&#160;: 133 (0x85) = flag n3 &amp; 8
+</p>
+<ul><li>PSVITA only: 480p (852x480)</li></ul>
+<p>Attribute on PS3 SFO&#160;: 128 (0x80) = flag n8
+</p>
+<h2><span class="mw-headline" id="Remote_Play_PS3-PSVita_compatibility">Remote Play PS3-PSVita compatibility</span><span class="mw-editsection"><span class="mw-editsection-bracket">[</span><a href="/vita/index.php?title=Remote_Play&amp;veaction=edit&amp;section=8" class="mw-editsection-visualeditor" title="Edit section: Remote Play PS3-PSVita compatibility">edit</a><span class="mw-editsection-divider"> | </span><a href="/vita/edit/Remote_Play?section=8" title="Edit section: Remote Play PS3-PSVita compatibility">edit source</a><span class="mw-editsection-bracket">]</span></span></h2>
+<p>Some PS3 titles have been updated to supports Remote Play:
+</p>
+<table class="wikitable sortable">
+<tbody><tr>
+<th>Title</th>
+<th>Official</th>
+<th>SFO-edit<br />/patch</th>
+<th>Notes
+</th></tr>
+<tr>
+<td>God of war Collection</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td>--</td>
+<td>Update 1.01 (PS3 SFO:FW 4.20), remote play for PSVita only
+</td></tr>
+<tr>
+<td>ICO™ &amp; Shadow of the Colossus™</td>
+<td>--</td>
+<td>--</td>
+<td>
+</td></tr></tbody></table>
+<p>For others titles, you need to patch them by yourself (some titles might have issues).
+</p><p>See <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href="http://www.ps3devwiki.com/wiki/PARAM.SFO#ATTRIBUTE_in_Patches">ATTRIBUTE in Patches</a>
+</p><p>Most of the PS3 wiki page should do for the moment, compatibility list need to be revised (delete ad hoc, add FW versions ..) and should be linked to a major website for easy contributions.
+</p>
+<h3><span class="mw-headline" id="Remote_Play_compatibility_table">Remote Play compatibility table</span><span class="mw-editsection"><span class="mw-editsection-bracket">[</span><a href="/vita/index.php?title=Remote_Play&amp;veaction=edit&amp;section=9" class="mw-editsection-visualeditor" title="Edit section: Remote Play compatibility table">edit</a><span class="mw-editsection-divider"> | </span><a href="/vita/edit/Remote_Play?section=9" title="Edit section: Remote Play compatibility table">edit source</a><span class="mw-editsection-bracket">]</span></span></h3>
+<table class="wikitable sortable">
+<tbody><tr>
+<th>Title</th>
+<th>Official<br />RemotePlay</th>
+<th>PSP SFO-edit<br />/patch</th>
+<th>PSVITA</th>
+<th>Notes (FW PS3/PSVITA)
+</th></tr>
+<tr>
+<td>Aqua Vita/Aquatopia (PSN game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Anarchy: Rush Hour (PSN game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Bejeweled 2 (PSN game/demo)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Bionic Commando Rearmed (PSN game/demo)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>BlazBlue: Calamity Trigger (BD game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Call of Juarez: Bound in Blood (BD game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Everybody's Golf: World Tour (BD game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Fallout 3: GOTY edition (BD game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>FirstPlay (PSN software)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Fritz Chess (BD game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Gundemonium Recollection (PSN game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>High Stakes on the Vegas Strip:Poker Edition (PSN game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Imabikisou (BD game/PSN demo)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>KillZone 3 (BD game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Lair (BD game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>LEGO Batman (BD game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Life with PlayStation (PSN software)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Mainichi Issho (PSN game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Misato Katsuragi's Reporting Plan (PSN game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Peggle (PSN game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Peggle Nights (PSN game add-on)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>PixelJunk Eden (PSN game/demo)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>PixelJunk Monsters (PSN game/demo)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>PixelJunk Shooter (PSN game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>PlayStation 1 games (CD games/demos, PSN games/demos)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>PlayTV (BD software/PSN demo)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>SingStar (BD game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>SingStar Vol. 2 (BD game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>SingStar ABBA (BD game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>VidZone (PSN software)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Weekly Toro Station (PSN game)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Zuma (PSN game/demo)</td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>MultiMan (Software)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Showtime (Software/Video category)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>need to edit SFO on latest version
+</td></tr>
+<tr>
+<td>Emulators Next</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>3d Dot Game Heroes (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Atelier Rorona (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>introduction video with blur images (sound ok), skip it, game itself ok.
+</td></tr>
+<tr>
+<td>Battle Fantasia (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Bayonetta (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Biohazard revival (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>(BD game installed as HDD game)
+</td></tr>
+<tr>
+<td>Demon's soul (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Crysis 2 (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Dead Space 2 (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Dragon Ball: Raging Blast 2 (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Farcry 2 (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Fritz Chess (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>F1 Formula one 2010 (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Forbidden Siren: Bloodcurse (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Gran Turismo 5 Prologue (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>buggy controlls when driving
+</td></tr>
+<tr>
+<td>inFamous (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>King Of Fighters XII (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Mayhem 3D (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Mini Ninjas (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Monopoly (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Naruto: Ultimate Ninja Storm 1 (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Naruto: Ultimate Ninja Storm 2 (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Need for speed hot pursuit (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Pro Evolution Soccer 2011 (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Red Dead Redemption (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Silent Hill: Homecoming (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>The Sims 3 (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Wet (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Wipeout HD Fury (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Zen Pinball (PSN game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#55CC55; color:#FFFFFF; text-align: center;"><span style="background:#55CC55; color:#FFFFFF;" title="Yes">Yes</span></td>
+<td></td>
+<td>Patch don't work for this game, you need to edit SFO and then rebuild database from recovery menu
+</td></tr>
+<tr>
+<td>Final Fantasy XIII (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>God of War III  (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>back to XMB on psp / reported to don t work also with VITA
+</td></tr>
+<tr>
+<td>Gran tourismo 5 (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Fist Of The North Star - Ken's Rage (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Little Big Planet 2 (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>reported to don t work on VITA (work only for Kazuo Hirai s VITA During TGS 2011? )
+</td></tr>
+<tr>
+<td>Marvel vs Capcom 3 (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Winning Eleven 2009 (BD game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>
+</td></tr>
+<tr>
+<td>Monster hunter 3rd (PSP game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>Adhoc
+</td></tr>
+<tr>
+<td>Fantasia Star Portable 2 Infinite (PSP game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>Adhoc
+</td></tr>
+<tr>
+<td>Dissidia 12 (Duodecim)Final Fantasy (PSP game)</td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td style="background:#CC5555; color:#FFFFFF; text-align: center;"><span style="background:#CC5555; color:#FFFFFF;" title="No">No</span></td>
+<td></td>
+<td>Adhoc
+</td></tr></tbody></table>
+<h3><span id="Issues_.2F_workarounds_.2F_tips"></span><span class="mw-headline" id="Issues_/_workarounds_/_tips">Issues / workarounds / tips</span><span class="mw-editsection"><span class="mw-editsection-bracket">[</span><a href="/vita/index.php?title=Remote_Play&amp;veaction=edit&amp;section=10" class="mw-editsection-visualeditor" title="Edit section: Issues / workarounds / tips">edit</a><span class="mw-editsection-divider"> | </span><a href="/vita/edit/Remote_Play?section=10" title="Edit section: Issues / workarounds / tips">edit source</a><span class="mw-editsection-bracket">]</span></span></h3>
+<ul><li>Officially Adhoc compatible titles
+<ul><li>You can play online PSP games through the Access Point mode of PS3 if you connect both of the devices to Playstation Network. In this case, PS3 is providing to the PSP a wifi connection (not sure if this service is available outside Japan).</li></ul></li></ul>
+<ul><li>Officially RemotePlay compatible titles
+<ul><li>Nothing to fix :P</li></ul></li></ul>
+<ul><li>Unofficially RemotePlay compatible BD titles
+<ul><li>Use the patch or edit the SFO.</li></ul></li></ul>
+<ul><li>Incompatible RemotePlay titles
+<ul><li>Most of the BD games in this section will launch with black screen due of the introduction video (codecs or resolutions) , ps3 reboot after a while. Can be resolved if you change the problematic videos with an other.</li>
+<li>Homebrew like Frogger, puzzles collection don t function due to theirs authors decisions.</li></ul></li></ul>
+<ul><li>Unofficially RemotePlay compatible PSN titles
+<ul><li>Use the patch or edit the SFO and then rebuild database from recovery menu (second method has better compatibility).</li></ul></li></ul>
+<ul><li>To "refresh" the XMB</li></ul>
+<p>When replacing a PARAM.SFO manually in the internal HDD (using a file manager, FTP, etc...), the system ignores it. This happens because the system is storing a "duplicated" copy of the old one.
+</p><p>The most convenient and quick way is as simple as booting the game one time (by pressing X button over his icon)... Then, inside the game press "PS" button and exit with "Quit game"... then you return to the XMB and the new PARAM.SFO has been loaded. So in resume... the XMB is refreshed when you boot it for first time so you need to boot it two times to load the new PARAM.SFO.
+(you can change something in PARAM.SFO as the first letter of the title of the game to check visually that your new SFO has been loaded)
+</p><p>If your new SFO is stil ignored by the PS3 after refreshing (mostly fews 3.55+ PSN games) or you can't boot it (TV not compatible, wrong order when installing, previous problematic SFO installed ....) or for easy sharing solution purpose, you'll need to overwrite it with your 1.01 SFO from install .PKG (or install first the edited SFO).
+</p><p>Other solution (need to be tested for the specific case of remote play but should work):
+</p><p>After replacing the PARAM.SFO of your PSN game with a corrected one, you need to change the available display modes in your PS3 settings to include 720p even though your TV doesn't support it.
+</p><p>Then you're going to launch the game. This will trigger the PS3 to read the corrected PARAM.SFO and to fix the entry in the database.
+</p><p>When the game starts the screen will be blurry and unplayable. Quit back to the XMB and restore your display's original settings.
+</p><p>The next time you'll load the PSN game it will display at 480p resolution and work like it should. Some TVs might support including 1080p when you edit the PARAM.SFO. I've just had better compatibility changing from PAL to NTSC instead of trying to upscale it.
+</p><p>Last solution can be to rebuild PS3 database by using the option "Rebuild database" from the PS3 Recovery Menu (this re-indexes all the files in the internal HDD). It is long but can fix rare problems.
+</p><p>If you got the message on XMB: "This content cannot be used during remote play", look at SFO tips.
+</p><p>If you have crash, XMB return, black screens, etc..., try to skip/switch the introduction video, play with differents resolutions but there are not so much more to do (or patch the EBOOT?).
+</p><p>From Sandungas' dissection of SFO <a target="_blank" rel="nofollow noreferrer noopener" class="external autonumber" href="http://www.ps3devwiki.com/wiki/PARAM.SFO#ATTRIBUTE_In_Bootable_content">[1]</a>: found a possible way to activate remote play HD PSVita by editing PS3 games SFO but can be: only working on higher fw consoles / specifics to a few games (with their updates).
+</p><p>Need to confirm that by activating the attribute "remote play HD VITA" on a few games, it seems to resolve sounds problems.
+</p><p>If someone want to try with specifics SFO, I don't have a PSVita but can prepare some special SFOs with remote play HD PSVita or other unknowns flags/specifics category, previously tested on PS3/PSP and nothing more than returns to XMB as possible "bad" effects.
+</p>
+<!-- 
+NewPP limit report
+Cached time: 20250412040103
+Cache expiry: 2592000
+Reduced expiry: false
+Complications: [show‐toc]
+CPU time usage: 0.049 seconds
+Real time usage: 0.051 seconds
+Preprocessor visited node count: 635/1000000
+Post‐expand include size: 20096/2097152 bytes
+Template argument size: 0/2097152 bytes
+Highest expansion depth: 2/100
+Expensive parser function count: 0/100
+Unstrip recursion depth: 0/20
+Unstrip post‐expand size: 0/5000000 bytes
+-->
+<!--
+Transclusion expansion time report (%,ms,calls,template)
+100.00%   12.976      1 -total
+ 22.14%    2.873     65 Template:Yes
+ 20.17%    2.617     84 Template:No
+-->
+
+<!-- Saved in parser cache with key psdev_psvitad:pcache:idhash:312-0!canonical and timestamp 20250412040103 and revision id 6026.
+ -->
+</div>
+<div class="printfooter" data-nosnippet="">Retrieved from "<a dir="ltr" href="https://www.psdevwiki.com/vita/index.php?title=Remote_Play&amp;oldid=6026">https://www.psdevwiki.com/vita/index.php?title=Remote_Play&amp;oldid=6026</a>"</div></div>
+		<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="/vita/Special:Categories" title="Special:Categories">Categories</a>: <ul><li><a href="/vita/Category:Software" title="Category:Software">Software</a></li><li><a href="/vita/Category:Main" title="Category:Main">Main</a></li></ul></div></div>
+	</div>
+</div>
+<div id='mw-data-after-content'>
+	<div class="gas-bottom"><script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><ins class="adsbygoogle gas-bottom-first"
+            style="display:table; width:728px; height:90px; margin:1em auto; clear:both;"
+            data-ad-client="ca-pub-9015332520988458"
+            data-ad-slot="7897517726"></ins><script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+        </script></div><div class="gas-bottom"><script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><ins class="adsbygoogle gas-bottom-first"
+            style="display:table; width:728px; height:90px; margin:1em auto; clear:both;"
+            data-ad-client="ca-pub-9015332520988458"
+            data-ad-slot="1931323254"></ins><script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+        </script></div><div class="mw-cookiewarning-container"><div class="mw-cookiewarning-text"><span>Cookies help us deliver our services. By using our services, you agree to our use of cookies.</span></div><form method="POST"><div class='oo-ui-layout oo-ui-horizontalLayout'><span class='oo-ui-widget oo-ui-widget-enabled oo-ui-buttonElement oo-ui-buttonElement-framed oo-ui-labelElement oo-ui-flaggedElement-progressive oo-ui-buttonWidget'><a role='button' tabindex='0' href='https://www.psdevwiki.com/ps3/PS3_Developer_wiki:Privacy_policy' rel='nofollow' class='oo-ui-buttonElement-button'><span class='oo-ui-iconElement-icon oo-ui-iconElement-noIcon oo-ui-image-progressive'></span><span class='oo-ui-labelElement-label'>More information</span><span class='oo-ui-indicatorElement-indicator oo-ui-indicatorElement-noIndicator oo-ui-image-progressive'></span></a></span><span class='oo-ui-widget oo-ui-widget-enabled oo-ui-inputWidget oo-ui-buttonElement oo-ui-buttonElement-framed oo-ui-labelElement oo-ui-flaggedElement-primary oo-ui-flaggedElement-progressive oo-ui-buttonInputWidget'><button type='submit' tabindex='0' name='disablecookiewarning' value='OK' class='oo-ui-inputWidget-input oo-ui-buttonElement-button'><span class='oo-ui-iconElement-icon oo-ui-iconElement-noIcon oo-ui-image-invert'></span><span class='oo-ui-labelElement-label'>OK</span><span class='oo-ui-indicatorElement-indicator oo-ui-indicatorElement-noIndicator oo-ui-image-invert'></span></button></span></div></form></div>
+</div>
+
+<div id="mw-navigation">
+	<h2>Navigation menu</h2>
+	<div id="mw-head">
+		
+
+<nav id="p-personal" class="vector-menu mw-portlet mw-portlet-personal vector-user-menu-legacy" aria-labelledby="p-personal-label" role="navigation"  >
+	<h3
+		id="p-personal-label"
+		
+		class="vector-menu-heading "
+	>
+		<span class="vector-menu-heading-label">Personal tools</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="pt-anonuserpage" class="mw-list-item"><span title="The user page for the IP address you are editing as">Not logged in</span></li><li id="pt-anontalk" class="mw-list-item"><a href="/vita/Special:MyTalk" title="Discussion about edits from this IP address [n]" accesskey="n"><span>Talk</span></a></li><li id="pt-darkmode" class="mw-list-item"><a href="#" class="ext-darkmode-link"><span>Dark mode (beta)</span></a></li><li id="pt-anoncontribs" class="mw-list-item"><a href="/vita/Special:MyContributions" title="A list of edits made from this IP address [y]" accesskey="y"><span>Contributions</span></a></li><li id="pt-createaccount" class="mw-list-item"><a href="/vita/index.php?title=Special:CreateAccount&amp;returnto=Remote+Play" title="You are encouraged to create an account and log in; however, it is not mandatory"><span>Create account</span></a></li><li id="pt-login" class="mw-list-item"><a href="/vita/index.php?title=Special:UserLogin&amp;returnto=Remote+Play" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o"><span>Log in</span></a></li></ul>
+		
+	</div>
+</nav>
+
+		<div id="left-navigation">
+			
+
+<nav id="p-namespaces" class="vector-menu mw-portlet mw-portlet-namespaces vector-menu-tabs vector-menu-tabs-legacy" aria-labelledby="p-namespaces-label" role="navigation"  >
+	<h3
+		id="p-namespaces-label"
+		
+		class="vector-menu-heading "
+	>
+		<span class="vector-menu-heading-label">Namespaces</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="ca-nstab-main" class="selected mw-list-item"><a href="/vita/Remote_Play" title="View the content page [c]" accesskey="c"><span>Page</span></a></li><li id="ca-talk" class="mw-list-item"><a href="/vita/Talk:Remote_Play" rel="discussion" title="Discussion about the content page [t]" accesskey="t"><span>Discussion</span></a></li></ul>
+		
+	</div>
+</nav>
+
+			
+
+<nav id="p-variants" class="vector-menu mw-portlet mw-portlet-variants emptyPortlet vector-menu-dropdown" aria-labelledby="p-variants-label" role="navigation"  >
+	<input type="checkbox"
+		id="p-variants-checkbox"
+		role="button"
+		aria-haspopup="true"
+		data-event-name="ui.dropdown-p-variants"
+		class="vector-menu-checkbox"
+		aria-labelledby="p-variants-label"
+	/>
+	<label
+		id="p-variants-label"
+		 aria-label="Change language variant"
+		class="vector-menu-heading "
+	>
+		<span class="vector-menu-heading-label">English</span>
+	</label>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"></ul>
+		
+	</div>
+</nav>
+
+		</div>
+		<div id="right-navigation">
+			
+
+<nav id="p-views" class="vector-menu mw-portlet mw-portlet-views vector-menu-tabs vector-menu-tabs-legacy" aria-labelledby="p-views-label" role="navigation"  >
+	<h3
+		id="p-views-label"
+		
+		class="vector-menu-heading "
+	>
+		<span class="vector-menu-heading-label">Views</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="ca-view" class="selected mw-list-item"><a href="/vita/Remote_Play"><span>Read</span></a></li><li id="ca-ve-edit" class="mw-list-item"><a href="/vita/index.php?title=Remote_Play&amp;veaction=edit" title="Edit this page [v]" accesskey="v"><span>Edit</span></a></li><li id="ca-edit" class="collapsible mw-list-item"><a href="/vita/edit/Remote_Play" title="Edit this page [e]" accesskey="e"><span>Edit source</span></a></li><li id="ca-history" class="mw-list-item"><a href="/vita/history/Remote_Play" title="Past revisions of this page [h]" accesskey="h"><span>View history</span></a></li></ul>
+		
+	</div>
+</nav>
+
+			
+
+<nav id="p-cactions" class="vector-menu mw-portlet mw-portlet-cactions emptyPortlet vector-menu-dropdown" aria-labelledby="p-cactions-label" role="navigation"  title="More options" >
+	<input type="checkbox"
+		id="p-cactions-checkbox"
+		role="button"
+		aria-haspopup="true"
+		data-event-name="ui.dropdown-p-cactions"
+		class="vector-menu-checkbox"
+		aria-labelledby="p-cactions-label"
+	/>
+	<label
+		id="p-cactions-label"
+		
+		class="vector-menu-heading "
+	>
+		<span class="vector-menu-heading-label">More</span>
+	</label>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"></ul>
+		
+	</div>
+</nav>
+
+			
+<div id="p-search" role="search" class="vector-search-box-vue  vector-search-box-show-thumbnail vector-search-box-auto-expand-width vector-search-box">
+	<div>
+			<h3 >
+				<label for="searchInput">Search</label>
+			</h3>
+		<form action="/vita/index.php" id="searchform"
+			class="vector-search-box-form">
+			<div id="simpleSearch"
+				class="vector-search-box-inner"
+				 data-search-loc="header-navigation">
+				<input class="vector-search-box-input"
+					 type="search" name="search" placeholder="Search Vita Developer wiki" aria-label="Search Vita Developer wiki" autocapitalize="sentences" title="Search Vita Developer wiki [f]" accesskey="f" id="searchInput"
+				>
+				<input type="hidden" name="title" value="Special:Search">
+				<input id="mw-searchButton"
+					 class="searchButton mw-fallbackSearchButton" type="submit" name="fulltext" title="Search the pages for this text" value="Search">
+				<input id="searchButton"
+					 class="searchButton" type="submit" name="go" title="Go to a page with this exact name if it exists" value="Go">
+			</div>
+		</form>
+	</div>
+</div>
+
+		</div>
+	</div>
+	
+
+<div id="mw-panel">
+	<div id="p-logo" role="banner">
+		<a class="mw-wiki-logo" href="/vita/Main_Page"
+			title="Visit the main page"></a>
+	</div>
+	
+
+<nav id="p-PlayStation_Devwikis" class="vector-menu mw-portlet mw-portlet-PlayStation_Devwikis vector-menu-portal portal" aria-labelledby="p-PlayStation_Devwikis-label" role="navigation"  >
+	<h3
+		id="p-PlayStation_Devwikis-label"
+		
+		class="vector-menu-heading "
+	>
+		<span class="vector-menu-heading-label">PlayStation Devwikis</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="n-Home" class="mw-list-item"><a href="https://www.psdevwiki.com" rel="nofollow" target="_blank"><span>Home</span></a></li><li id="n-PS1-Dev-Wiki" class="mw-list-item"><a href="https://www.psdevwiki.com/ps1/" rel="nofollow" target="_blank"><span>PS1 Dev Wiki</span></a></li><li id="n-PS2-Dev-Wiki" class="mw-list-item"><a href="https://www.psdevwiki.com/ps2/" rel="nofollow" target="_blank"><span>PS2 Dev Wiki</span></a></li><li id="n-PS3-Dev-Wiki" class="mw-list-item"><a href="https://www.psdevwiki.com/ps3/" rel="nofollow" target="_blank"><span>PS3 Dev Wiki</span></a></li><li id="n-PS4-Dev-Wiki" class="mw-list-item"><a href="https://www.psdevwiki.com/ps4/" rel="nofollow" target="_blank"><span>PS4 Dev Wiki</span></a></li><li id="n-PS5-Dev-Wiki" class="mw-list-item"><a href="https://www.psdevwiki.com/ps5/" rel="nofollow" target="_blank"><span>PS5 Dev Wiki</span></a></li><li id="n-PSP-Dev-Wiki" class="mw-list-item"><a href="https://www.psdevwiki.com/psp/" rel="nofollow" target="_blank"><span>PSP Dev Wiki</span></a></li><li id="n-Vita-Dev-Wiki" class="mw-list-item"><a href="https://www.psdevwiki.com/vita/" rel="nofollow" target="_blank"><span>Vita Dev Wiki</span></a></li><li id="n-PS-Classic-Dev-Wiki" class="mw-list-item"><a href="https://www.psdevwiki.com/psclassic" rel="nofollow" target="_blank"><span>PS Classic Dev Wiki</span></a></li></ul>
+		
+	</div>
+</nav>
+
+	
+
+<nav id="p-Other_Wikis" class="vector-menu mw-portlet mw-portlet-Other_Wikis vector-menu-portal portal" aria-labelledby="p-Other_Wikis-label" role="navigation"  >
+	<h3
+		id="p-Other_Wikis-label"
+		
+		class="vector-menu-heading "
+	>
+		<span class="vector-menu-heading-label">Other Wikis</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="n-HENkaku-Dev-Wiki" class="mw-list-item"><a href="http://wiki.henkaku.xyz/" rel="nofollow" target="_blank"><span>HENkaku Dev Wiki</span></a></li><li id="n-ConsoleMods.org" class="mw-list-item"><a href="https://www.consolemods.org/wiki/Main_Page" rel="nofollow" target="_blank"><span>ConsoleMods.org</span></a></li><li id="n-TeamXLink-Wiki" class="mw-list-item"><a href="https://www.teamxlink.co.uk/wiki/Main_Page" rel="nofollow" target="_blank"><span>TeamXLink Wiki</span></a></li></ul>
+		
+	</div>
+</nav>
+
+
+<nav id="p-Discord" class="vector-menu mw-portlet mw-portlet-Discord vector-menu-portal portal" aria-labelledby="p-Discord-label" role="navigation"  >
+	<h3
+		id="p-Discord-label"
+		
+		class="vector-menu-heading "
+	>
+		<span class="vector-menu-heading-label">Discord</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="n-PlayStation-Devwiki" class="mw-list-item"><a href="https://discord.gg/K7fjFt3" rel="nofollow" target="_blank"><span>PlayStation Devwiki</span></a></li><li id="n-ConsoleMods.org" class="mw-list-item"><a href="https://discord.gg/x5vEnkR4C8" rel="nofollow" target="_blank"><span>ConsoleMods.org</span></a></li></ul>
+		
+	</div>
+</nav>
+
+
+<nav id="p-navigation" class="vector-menu mw-portlet mw-portlet-navigation vector-menu-portal portal" aria-labelledby="p-navigation-label" role="navigation"  >
+	<h3
+		id="p-navigation-label"
+		
+		class="vector-menu-heading "
+	>
+		<span class="vector-menu-heading-label">Navigation</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="n-mainpage-description" class="mw-list-item"><a href="/vita/Main_Page" title="Visit the main page [z]" accesskey="z"><span>Main page</span></a></li><li id="n-portal" class="mw-list-item"><a href="/vita/Vita_Developer_wiki:Community_portal" title="About the project, what you can do, where to find things"><span>Community portal</span></a></li><li id="n-currentevents" class="mw-list-item"><a href="/vita/Vita_Developer_wiki:Current_events" title="Find background information on current events"><span>Current events</span></a></li><li id="n-recentchanges" class="mw-list-item"><a href="/vita/Special:RecentChanges" title="A list of recent changes in the wiki [r]" accesskey="r"><span>Recent changes</span></a></li><li id="n-contributionscores" class="mw-list-item"><a href="/vita/Special:ContributionScores"><span>Contribution scores</span></a></li><li id="n-randompage" class="mw-list-item"><a href="/vita/Special:Random" title="Load a random page [x]" accesskey="x"><span>Random page</span></a></li><li id="n-All-Pages" class="mw-list-item"><a href="/vita/Special:AllPages"><span>All Pages</span></a></li><li id="n-Staff-contacts" class="mw-list-item"><a href="https://www.psdevwiki.com/ps3/Staff_Contacts" rel="nofollow" target="_blank"><span>Staff contacts</span></a></li><li id="n-help" class="mw-list-item"><a href="https://www.mediawiki.org/wiki/Special:MyLanguage/Help:Contents" target="_blank" title="The place to find out"><span>Help</span></a></li></ul>
+		
+	</div>
+</nav>
+
+
+<nav id="p-tb" class="vector-menu mw-portlet mw-portlet-tb vector-menu-portal portal" aria-labelledby="p-tb-label" role="navigation"  >
+	<h3
+		id="p-tb-label"
+		
+		class="vector-menu-heading "
+	>
+		<span class="vector-menu-heading-label">Tools</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="t-whatlinkshere" class="mw-list-item"><a href="/vita/Special:WhatLinksHere/Remote_Play" title="A list of all wiki pages that link here [j]" accesskey="j"><span>What links here</span></a></li><li id="t-recentchangeslinked" class="mw-list-item"><a href="/vita/Special:RecentChangesLinked/Remote_Play" rel="nofollow" title="Recent changes in pages linked from this page [k]" accesskey="k"><span>Related changes</span></a></li><li id="t-specialpages" class="mw-list-item"><a href="/vita/Special:SpecialPages" title="A list of all special pages [q]" accesskey="q"><span>Special pages</span></a></li><li id="t-print" class="mw-list-item"><a href="javascript:print();" rel="alternate" title="Printable version of this page [p]" accesskey="p"><span>Printable version</span></a></li><li id="t-permalink" class="mw-list-item"><a href="/vita/index.php?title=Remote_Play&amp;oldid=6026" title="Permanent link to this revision of this page"><span>Permanent link</span></a></li><li id="t-info" class="mw-list-item"><a href="/vita/index.php?title=Remote_Play&amp;action=info" title="More information about this page"><span>Page information</span></a></li></ul>
+		<div class="after-portlet after-portlet-tb"><script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+	<ins class="adsbygoogle"
+	     style="display:inline-block;width:160px;height:1000px;margin:20px 0 0 -20px;"
+	     data-ad-client="ca-pub-9015332520988458"
+	     data-ad-slot="1352290675"
+	</ins>
+<script>
+	(adsbygoogle = window.adsbygoogle || []).push({});
+</script></div>
+	</div>
+</nav>
+
+	
+</div>
+
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" >
+	<ul id="footer-info">
+	<li id="footer-info-lastmod"> This page was last edited on 3 May 2018, at 20:05.</li>
+	<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="http://www.gnu.org/licenses/old-licenses/fdl-1.2.txt">GNU Free Documentation License 1.2</a> unless otherwise noted.</li>
+</ul>
+
+	<ul id="footer-places">
+	<li id="footer-places-privacy"><a href="/vita/Vita_Developer_wiki:Privacy_policy">Privacy policy</a></li>
+	<li id="footer-places-about"><a href="/vita/Vita_Developer_wiki:About">About Vita Developer wiki</a></li>
+	<li id="footer-places-disclaimer"><a href="/vita/Vita_Developer_wiki:General_disclaimer">Disclaimers</a></li>
+</ul>
+
+	<ul id="footer-icons" class="noprint">
+	<li id="footer-copyrightico"><a href="http://www.gnu.org/licenses/old-licenses/fdl-1.2.txt" target="_blank"><img src="/vita/resources/assets/licenses/gnu-fdl.png" alt="GNU Free Documentation License 1.2" width="88" height="31" loading="lazy"/></a></li>
+	<li id="footer-poweredbyico"><a href="https://www.mediawiki.org/" target="_blank"><img src="/vita/resources/assets/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" srcset="/vita/resources/assets/poweredby_mediawiki_132x47.png 1.5x, /vita/resources/assets/poweredby_mediawiki_176x62.png 2x" width="88" height="31" loading="lazy"/></a></li>
+</ul>
+
+</footer>
+
+<script src="https://www.googletagmanager.com/gtag/js?id=G-0DGNXPL208" async=""></script><script>
+window.dataLayer = window.dataLayer || [];
+
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-0DGNXPL208', {"anonymize_ip":true});
+</script>
+
+<script>(RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgPageParseReport":{"limitreport":{"cputime":"0.049","walltime":"0.051","ppvisitednodes":{"value":635,"limit":1000000},"postexpandincludesize":{"value":20096,"limit":2097152},"templateargumentsize":{"value":0,"limit":2097152},"expansiondepth":{"value":2,"limit":100},"expensivefunctioncount":{"value":0,"limit":100},"unstrip-depth":{"value":0,"limit":20},"unstrip-size":{"value":0,"limit":5000000},"timingprofile":["100.00%   12.976      1 -total"," 22.14%    2.873     65 Template:Yes"," 20.17%    2.617     84 Template:No"]},"cachereport":{"timestamp":"20250412040103","ttl":2592000,"transientcontent":false}}});mw.config.set({"wgBackendResponseTime":233});});</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e2fcb286f6123f4',t:'MTc3NDYyOTE3Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<!-- Cached 20250412040103 -->
+</html>
