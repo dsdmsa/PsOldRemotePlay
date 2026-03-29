@@ -13,6 +13,7 @@ import com.my.psoldremoteplay.ui.components.*
 fun RemotePlayScreen(
     state: RemotePlayState,
     onIntent: (RemotePlayIntent) -> Unit,
+    currentFrame: androidx.compose.ui.graphics.ImageBitmap? = null,
     modifier: Modifier = Modifier
 ) {
     MaterialTheme(colorScheme = darkColorScheme()) {
@@ -28,6 +29,7 @@ fun RemotePlayScreen(
                         )
                         VideoSurface(
                             state = state,
+                            currentFrame = currentFrame,
                             modifier = Modifier.weight(1f).fillMaxHeight().padding(end = 8.dp)
                         )
                         LogPanel(
@@ -41,6 +43,7 @@ fun RemotePlayScreen(
                     Column(modifier = Modifier.fillMaxSize()) {
                         VideoSurface(
                             state = state,
+                            currentFrame = currentFrame,
                             modifier = Modifier.fillMaxWidth().weight(0.3f)
                         )
                         Spacer(Modifier.height(8.dp))

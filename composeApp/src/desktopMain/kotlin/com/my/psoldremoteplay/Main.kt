@@ -38,6 +38,7 @@ fun main() = application {
         state = rememberWindowState(width = 1200.dp, height = 750.dp)
     ) {
         val state by viewModel.state.collectAsState()
-        RemotePlayScreen(state = state, onIntent = viewModel::onIntent)
+        val currentFrame by deps.videoRenderer.currentFrame.collectAsState()
+        RemotePlayScreen(state = state, onIntent = viewModel::onIntent, currentFrame = currentFrame)
     }
 }

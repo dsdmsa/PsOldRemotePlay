@@ -19,7 +19,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             // ViewModel survives configuration changes (rotation) with this factory pattern
-            val viewModel = viewModel { RemotePlayViewModel(AndroidDependencies()) }
+            val deps = remember { AndroidDependencies() }
+            val viewModel = viewModel { RemotePlayViewModel(deps) }
 
             LaunchedEffect(Unit) {
                 viewModel.effects.collectLatest { effect ->
@@ -36,7 +37,8 @@ class MainActivity : ComponentActivity() {
             }
 
             val state by viewModel.state.collectAsState()
-            RemotePlayScreen(state = state, onIntent = viewModel::onIntent)
+            val currentFrame by deps.videoRenderer.currentFrame.collectAsState()
+            RemotePlayScreen(state = state, onIntent = viewModel::onIntent, currentFrame = currentFrame)
         }
     }
 }
