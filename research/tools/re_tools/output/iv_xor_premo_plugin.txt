@@ -1,0 +1,23 @@
+=== IV XOR Finder: /Users/mihailurmanschi/Work/PsOldRemotePlay/research/pupps3/decrypted_elfs/premo_plugin.elf ===
+File size: 291,520 bytes (284.7 KB)
+Architecture: ppc
+
+--- Searching for IV base constants ---
+  IV_BASE_PSP: not found
+  IV_BASE_Phone: not found
+  IV_BASE_PC: not found
+
+--- Searching for registration XOR keys ---
+  REG_XOR_PSP: not found
+  REG_XOR_Phone: not found
+  REG_XOR_PC: not found
+
+--- Searching for session keys ---
+  SKEY0: not found
+  SKEY2: not found
+
+============================================================
+SUMMARY
+============================================================
+No IV base constants found in this binary.
+This binary may not contain the registration handler.

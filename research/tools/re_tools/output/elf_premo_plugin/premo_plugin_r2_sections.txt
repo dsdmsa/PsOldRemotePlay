@@ -1,0 +1,2 @@
+nth paddr  size vaddr  vsize perm flags type name
+―――――――――――――――――――――――――――――――――――――――――――――――――

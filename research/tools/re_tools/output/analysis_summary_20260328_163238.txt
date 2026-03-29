@@ -1,0 +1,23 @@
+PS3 Remote Play Binary Analysis Summary
+Generated: Sat Mar 28 16:32:38 PDT 2026
+==============================================
+
+PHASE 1: PS3 ELF Analysis
+  Source: /Users/mihailurmanschi/Work/PsOldRemotePlay/research/pupps3/decrypted_elfs
+  Files: 4
+
+  [PASS] sysconf_plugin.elf
+  [PASS] premo_plugin.elf
+  [PASS] premo_game_plugin.elf
+  [PASS] libsysutil_remoteplay.elf
+
+PHASE 3: IV XOR Pattern Search
+
+  [IV FOUND] sysconf_plugin.elf
+  [IV NOT FOUND] premo_plugin.elf
+  [IV NOT FOUND] premo_game_plugin.elf
+  [IV NOT FOUND] libsysutil_remoteplay.elf
+
+==============================================
+TOTALS: 4 passed, 0 failed
+==============================================

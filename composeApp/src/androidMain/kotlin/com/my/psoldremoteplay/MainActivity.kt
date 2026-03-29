@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.my.psoldremoteplay.di.AndroidDependencies
 import com.my.psoldremoteplay.presentation.RemotePlayEffect
 import com.my.psoldremoteplay.presentation.RemotePlayViewModel
@@ -16,10 +17,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        val deps = AndroidDependencies()
-        val viewModel = RemotePlayViewModel(deps)
-
         setContent {
+            // ViewModel survives configuration changes (rotation) with this factory pattern
+            val viewModel = viewModel { RemotePlayViewModel(AndroidDependencies()) }
+
             LaunchedEffect(Unit) {
                 viewModel.effects.collectLatest { effect ->
                     when (effect) {

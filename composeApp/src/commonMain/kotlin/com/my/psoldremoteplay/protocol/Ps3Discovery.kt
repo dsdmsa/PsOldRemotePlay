@@ -11,4 +11,5 @@ data class Ps3Info(
 
 interface Ps3Discoverer {
     suspend fun discover(timeoutMs: Int = 3000): Ps3Info?
+    suspend fun discoverDirect(ip: String, timeoutMs: Int = 3000): Ps3Info?
 }

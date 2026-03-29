@@ -1,0 +1,1 @@
+/Users/mihailurmanschi/Work/PsOldRemotePlay/research/pupps3/decrypted_elfs/premo_game_plugin.elf: ELF 64-bit MSB processor-specific, 64-bit PowerPC or cisco 7500, version 1

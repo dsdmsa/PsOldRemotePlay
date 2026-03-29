@@ -1,0 +1,50 @@
+=== IV XOR Finder: /Users/mihailurmanschi/Work/PsOldRemotePlay/research/pupps3/decrypted_elfs/sysconf_plugin.elf ===
+File size: 2,426,896 bytes (2370.0 KB)
+Architecture: ppc
+
+--- Searching for IV base constants ---
+
+[FOUND] IV_BASE_PSP (BE) at offset 0x00150FA0
+  Context: ...fdc3f6a64d2aba7a38926cbc3431e10e [3a9df33b99cf9c0d] bf5881126c183264f116f0da442c06c2...
+
+  Scanning for PPC XOR instructions (window=512):
+    (no PPC XOR found)
+
+  Scanning for PPC constant-loading sequences:
+    (no lis+ori sequences found)
+
+[FOUND] IV_BASE_Phone (BE) at offset 0x00150FC0
+  Context: ...f116f0da442c06c245b15e48f904e3e6 [290de907e23be2fc] 3408ca4bdee4af3aec6d706b1e0a9a75...
+
+  Scanning for PPC XOR instructions (window=512):
+    (no PPC XOR found)
+
+  Scanning for PPC constant-loading sequences:
+    (no lis+ori sequences found)
+
+[FOUND] IV_BASE_PC (BE) at offset 0x00150FE0
+  Context: ...ec6d706b1e0a9a758cda782751a3c37b [5b6440c52e74c046] 4872c9c5490c7904485454502f312e31...
+
+  Scanning for PPC XOR instructions (window=512):
+    (no PPC XOR found)
+
+  Scanning for PPC constant-loading sequences:
+    (no lis+ori sequences found)
+
+--- Searching for registration XOR keys ---
+  REG_XOR_PSP: not found
+  REG_XOR_Phone: not found
+  REG_XOR_PC: not found
+
+--- Searching for session keys ---
+  SKEY0: not found
+  SKEY2: not found
+
+============================================================
+SUMMARY
+============================================================
+Found 0 XOR instructions near IV bases
+
+IV bases found but no nearby XOR instructions detected.
+The XOR may use indirect addressing or be further away.
+Try increasing --window or using radare2 for full disassembly.

@@ -23,8 +23,22 @@ data class SessionResponse(
 
 interface PremoSessionHandler {
     suspend fun createSession(ps3Ip: String, config: SessionConfig): Result<SessionResponse>
-    suspend fun startVideoStream(ps3Ip: String, sessionId: String, authToken: String, onPacket: (StreamPacket) -> Unit)
-    suspend fun startAudioStream(ps3Ip: String, sessionId: String, authToken: String, onPacket: (StreamPacket) -> Unit)
+    suspend fun startVideoStream(
+        ps3Ip: String,
+        sessionId: String,
+        authToken: String,
+        aesKey: ByteArray,    // for packet decryption
+        aesIv: ByteArray,     // for packet decryption (fresh copy per packet)
+        onPacket: (StreamPacket) -> Unit
+    )
+    suspend fun startAudioStream(
+        ps3Ip: String,
+        sessionId: String,
+        authToken: String,
+        aesKey: ByteArray,
+        aesIv: ByteArray,
+        onPacket: (StreamPacket) -> Unit
+    )
     fun disconnect()
 }
 

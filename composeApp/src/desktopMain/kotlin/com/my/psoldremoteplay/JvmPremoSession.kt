@@ -43,7 +43,12 @@ class JvmPremoSession(private val crypto: PremoCrypto, private val logger: Premo
         }
 
     override suspend fun startVideoStream(
-        ps3Ip: String, sessionId: String, authToken: String, onPacket: (StreamPacket) -> Unit
+        ps3Ip: String,
+        sessionId: String,
+        authToken: String,
+        aesKey: ByteArray,
+        aesIv: ByteArray,
+        onPacket: (StreamPacket) -> Unit
     ) = withContext(Dispatchers.IO) {
         try {
             val sock = Socket(ps3Ip, PremoConstants.PORT)
@@ -68,23 +73,61 @@ class JvmPremoSession(private val crypto: PremoCrypto, private val logger: Premo
             val headerBuf = ByteArray(32)
             var frameCount = 0
 
+            // Read HTTP chunked transfer encoding
             while (!sock.isClosed) {
-                readExactly(inp, headerBuf, 32)
+                // Read chunk size line (hex digits followed by \r\n)
+                val chunkSizeLine = readLine(inp) ?: break
+                val chunkSize = try {
+                    chunkSizeLine.trim().toInt(16)
+                } catch (e: NumberFormatException) {
+                    logger.error("VIDEO", "Invalid chunk size: '$chunkSizeLine'")
+                    break
+                }
 
-                val payloadLen = ((headerBuf[16].toInt() and 0xFF) shl 8) or
-                        (headerBuf[17].toInt() and 0xFF)
+                if (chunkSize == 0) {
+                    // End of chunked stream
+                    logger.log("VIDEO", "Received final chunk (size 0), stream complete")
+                    break
+                }
 
-                if (payloadLen <= 0 || payloadLen > 0x100000) {
-                    logger.error("VIDEO", "Invalid payload length: $payloadLen")
+                // Read the chunk data (32-byte header + payload)
+                val chunkData = ByteArray(chunkSize)
+                readExactly(inp, chunkData, chunkSize)
+
+                // Read trailing \r\n after chunk
+                val trailingCrlf = ByteArray(2)
+                readExactly(inp, trailingCrlf, 2)
+                if (trailingCrlf[0] != 0x0D.toByte() || trailingCrlf[1] != 0x0A.toByte()) {
+                    logger.error("VIDEO", "Missing CRLF after chunk")
+                }
+
+                // Parse chunk data: first 32 bytes = header, rest = payload
+                if (chunkSize < 32) {
+                    logger.error("VIDEO", "Chunk too small: $chunkSize bytes (need at least 32)")
                     continue
                 }
 
-                val payload = ByteArray(payloadLen)
-                readExactly(inp, payload, payloadLen)
+                chunkData.copyInto(headerBuf, 0, 0, 32)
+                var payload = chunkData.copyOfRange(32, chunkSize)
+
+                // Check if payload is encrypted: magic 0xFF/0xFE (H.264) && unk6==0x0401
+                val isH264 = (headerBuf[1].toInt() and 0xFF) == 0xFF || (headerBuf[1].toInt() and 0xFF) == 0xFE
+                val unk6 = ((headerBuf[22].toInt() and 0xFF) shl 8) or (headerBuf[23].toInt() and 0xFF)
+                val isEncrypted = isH264 && unk6 == 0x0401
+
+                // Decrypt if needed (H.264 keyframes with unk6==0x0401)
+                if (isEncrypted && payload.isNotEmpty()) {
+                    val freshIv = aesIv.copyOf()
+                    val decryptLen = (payload.size / 16) * 16  // only full blocks
+                    if (decryptLen > 0) {
+                        val decrypted = crypto.aesDecrypt(payload.copyOfRange(0, decryptLen), aesKey, freshIv)
+                        payload = decrypted + payload.copyOfRange(decryptLen, payload.size)
+                    }
+                }
 
                 frameCount++
                 if (frameCount % 30 == 0) {
-                    logger.log("VIDEO", "Received $frameCount packets, last payload: $payloadLen bytes, magic: ${"%02X %02X".format(headerBuf[0], headerBuf[1])}")
+                    logger.log("VIDEO", "Received $frameCount packets, last payload: ${payload.size} bytes, magic: ${"%02X %02X".format(headerBuf[0], headerBuf[1])}")
                 }
 
                 onPacket(StreamPacket(
@@ -94,7 +137,7 @@ class JvmPremoSession(private val crypto: PremoCrypto, private val logger: Premo
                             ((headerBuf[5].toLong() and 0xFF) shl 16) or
                             ((headerBuf[6].toLong() and 0xFF) shl 8) or
                             (headerBuf[7].toLong() and 0xFF),
-                    payloadLength = payloadLen,
+                    payloadLength = payload.size,
                     rawHeader = headerBuf.copyOf(),
                     payload = payload
                 ))
@@ -105,9 +148,88 @@ class JvmPremoSession(private val crypto: PremoCrypto, private val logger: Premo
     }
 
     override suspend fun startAudioStream(
-        ps3Ip: String, sessionId: String, authToken: String, onPacket: (StreamPacket) -> Unit
-    ) {
-        // TODO: similar to video
+        ps3Ip: String,
+        sessionId: String,
+        authToken: String,
+        aesKey: ByteArray,
+        aesIv: ByteArray,
+        onPacket: (StreamPacket) -> Unit
+    ) = withContext(Dispatchers.IO) {
+        try {
+            val sock = Socket(ps3Ip, PremoConstants.PORT)
+            socket = sock
+            sock.soTimeout = 0
+
+            val request = buildString {
+                append("GET /sce/premo/session/audio HTTP/1.1\r\n")
+                append("SessionID: $sessionId\r\n")
+                append("PREMO-Auth: $authToken\r\n")
+                append("\r\n")
+            }
+
+            logger.log("AUDIO", "Starting audio stream...")
+            sock.getOutputStream().write(request.toByteArray(Charsets.US_ASCII))
+            sock.getOutputStream().flush()
+
+            skipHttpHeaders(sock.getInputStream())
+
+            val inp = sock.getInputStream()
+            val headerBuf = ByteArray(32)
+            var frameCount = 0
+
+            while (!sock.isClosed) {
+                val chunkSizeLine = readLine(inp) ?: break
+                val chunkSize = try {
+                    chunkSizeLine.trim().toInt(16)
+                } catch (e: NumberFormatException) {
+                    break
+                }
+
+                if (chunkSize == 0) break
+
+                val chunkData = ByteArray(chunkSize)
+                readExactly(inp, chunkData, chunkSize)
+                val trailingCrlf = ByteArray(2)
+                readExactly(inp, trailingCrlf, 2)
+
+                if (chunkSize < 32) continue
+
+                chunkData.copyInto(headerBuf, 0, 0, 32)
+                var payload = chunkData.copyOfRange(32, chunkSize)
+
+                // Audio encryption (magic 0x80 = AAC)
+                val isAudio = (headerBuf[1].toInt() and 0xFF) == 0x80
+                val isEncrypted = isAudio
+
+                if (isEncrypted && payload.isNotEmpty()) {
+                    val freshIv = aesIv.copyOf()
+                    val decryptLen = (payload.size / 16) * 16
+                    if (decryptLen > 0) {
+                        val decrypted = crypto.aesDecrypt(payload.copyOfRange(0, decryptLen), aesKey, freshIv)
+                        payload = decrypted + payload.copyOfRange(decryptLen, payload.size)
+                    }
+                }
+
+                frameCount++
+                if (frameCount % 10 == 0) {
+                    logger.log("AUDIO", "Received $frameCount packets")
+                }
+
+                onPacket(StreamPacket(
+                    magic = headerBuf.copyOfRange(0, 2),
+                    frame = ((headerBuf[2].toInt() and 0xFF) shl 8) or (headerBuf[3].toInt() and 0xFF),
+                    clock = ((headerBuf[4].toLong() and 0xFF) shl 24) or
+                            ((headerBuf[5].toLong() and 0xFF) shl 16) or
+                            ((headerBuf[6].toLong() and 0xFF) shl 8) or
+                            (headerBuf[7].toLong() and 0xFF),
+                    payloadLength = payload.size,
+                    rawHeader = headerBuf.copyOf(),
+                    payload = payload
+                ))
+            }
+        } catch (e: Exception) {
+            logger.error("AUDIO", "Audio stream error: ${e.message}", e)
+        }
     }
 
     override fun disconnect() {
@@ -128,6 +250,21 @@ class JvmPremoSession(private val crypto: PremoCrypto, private val logger: Premo
             val b = inp.read()
             if (b == -1) break
             if (b == 0x0D || b == 0x0A) crlfCount++ else crlfCount = 0
+        }
+    }
+
+    private fun readLine(inp: InputStream): String? {
+        val sb = StringBuilder()
+        while (true) {
+            val b = inp.read()
+            if (b == -1) return if (sb.isEmpty()) null else sb.toString()
+            if (b == 0x0A) { // \n
+                if (sb.isNotEmpty() && sb.last() == '\r') {
+                    return sb.dropLast(1).toString()
+                }
+                return sb.toString()
+            }
+            sb.append(b.toChar())
         }
     }
 

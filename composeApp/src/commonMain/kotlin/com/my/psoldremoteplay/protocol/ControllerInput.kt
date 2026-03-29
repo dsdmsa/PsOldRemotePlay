@@ -33,5 +33,5 @@ object ControllerButtons {
 interface ControllerInputSender {
     suspend fun connect(ps3Ip: String, sessionId: String, authToken: String)
     suspend fun sendState(state: ControllerState)
-    fun disconnect()
+    suspend fun disconnect()
 }

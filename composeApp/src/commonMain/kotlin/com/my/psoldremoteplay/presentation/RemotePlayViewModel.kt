@@ -81,7 +81,7 @@ class RemotePlayViewModel(private val deps: PlatformDependencies) : ViewModel() 
             updateState { copy(ps3Ip = cleanedIp, connectionStatus = ConnectionStatus.Discovering, statusText = "Direct discovery to $cleanedIp...") }
             logger.log("DISCOVERY", "Sending SRCH directly to $cleanedIp...")
 
-            val info = deps.discoverer.discover(timeoutMs = 3000)
+            val info = deps.discoverer.discoverDirect(cleanedIp, timeoutMs = 3000)
             if (info != null) {
                 updateState {
                     copy(
@@ -150,7 +150,7 @@ class RemotePlayViewModel(private val deps: PlatformDependencies) : ViewModel() 
                 val authToken = generateAuthToken(deps.crypto, pkeyBytes, resp.nonce, macBytes)
                 logger.log("SESSION", "Auth token: $authToken")
 
-                startVideoStream(ip, resp.sessionId, authToken)
+                startVideoStream(ip, resp.sessionId, authToken, pkeyBytes, resp.nonce)
             }
             result.onFailure { e ->
                 updateState { copy(connectionStatus = ConnectionStatus.Error, statusText = "Failed: ${e.message?.take(50)}") }
@@ -158,14 +158,27 @@ class RemotePlayViewModel(private val deps: PlatformDependencies) : ViewModel() 
         }
     }
 
-    private fun startVideoStream(ip: String, sessionId: String, authToken: String) {
+    private fun startVideoStream(ip: String, sessionId: String, authToken: String, pkeyBytes: ByteArray, nonce: ByteArray) {
         viewModelScope.launch {
             updateState { copy(isStreaming = true, connectionStatus = ConnectionStatus.Streaming, statusText = "Streaming...") }
+
+            // Compute session encryption keys
+            val aesKey = xorBytes(pkeyBytes, PremoConstants.SKEY0)
+            val aesIv = xorBytes(nonce, PremoConstants.SKEY2)
+
             deps.videoRenderer.start()
             logger.log("VIDEO", "Starting video stream...")
-            deps.sessionHandler.startVideoStream(ip, sessionId, authToken) { packet ->
+            deps.sessionHandler.startVideoStream(ip, sessionId, authToken, aesKey, aesIv) { packet ->
                 deps.videoRenderer.onStreamPacket(packet.rawHeader, packet.payload, false)
                 updateState { copy(videoPacketCount = videoPacketCount + 1) }
+            }
+
+            // Start audio in parallel
+            deps.audioRenderer.start()
+            logger.log("AUDIO", "Starting audio stream...")
+            deps.sessionHandler.startAudioStream(ip, sessionId, authToken, aesKey, aesIv) { packet ->
+                logger.log("AUDIO", "Audio packet: ${packet.payload.size} bytes, magic: ${"%02X".format(packet.magic[1])}")
+                // Audio rendering will be handled by AudioRenderer when decoders are implemented
             }
         }
     }
@@ -240,18 +253,21 @@ class RemotePlayViewModel(private val deps: PlatformDependencies) : ViewModel() 
     }
 
     private fun disconnect() {
-        deps.sessionHandler.disconnect()
-        deps.videoRenderer.stop()
-        deps.controllerInput.disconnect()
-        updateState {
-            copy(
-                connectionStatus = ConnectionStatus.Disconnected,
-                isStreaming = false,
-                videoPacketCount = 0,
-                statusText = "Disconnected"
-            )
+        viewModelScope.launch {
+            deps.sessionHandler.disconnect()
+            deps.videoRenderer.stop()
+            deps.audioRenderer.stop()
+            deps.controllerInput.disconnect()
+            updateState {
+                copy(
+                    connectionStatus = ConnectionStatus.Disconnected,
+                    isStreaming = false,
+                    videoPacketCount = 0,
+                    statusText = "Disconnected"
+                )
+            }
+            logger.log("SESSION", "Disconnected")
         }
-        logger.log("SESSION", "Disconnected")
     }
 
     private fun copyLogs() {

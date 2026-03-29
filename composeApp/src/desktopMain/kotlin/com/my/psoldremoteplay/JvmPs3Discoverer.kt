@@ -69,7 +69,7 @@ class JvmPs3Discoverer(private val logger: PremoLogger) : Ps3Discoverer {
         }
     }
 
-    fun discoverDirect(ip: String, timeoutMs: Int = 3000): Ps3Info? {
+    override suspend fun discoverDirect(ip: String, timeoutMs: Int): Ps3Info? = withContext(Dispatchers.IO) {
         // Try UDP SRCH first
         val udpResult = try {
             logger.log("DISCOVERY", "Trying UDP SRCH to $ip:${PremoConstants.PORT}...")
@@ -78,10 +78,10 @@ class JvmPs3Discoverer(private val logger: PremoLogger) : Ps3Discoverer {
             logger.log("DISCOVERY", "UDP SRCH failed: ${e.message}")
             null
         }
-        if (udpResult != null) return udpResult
+        if (udpResult != null) return@withContext udpResult
 
         // Fallback: try TCP connection to port 9293
-        return try {
+        return@withContext try {
             logger.log("DISCOVERY", "Trying TCP connection to $ip:${PremoConstants.PORT}...")
             val socket = java.net.Socket()
             socket.connect(java.net.InetSocketAddress(ip, PremoConstants.PORT), timeoutMs)
