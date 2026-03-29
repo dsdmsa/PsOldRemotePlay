@@ -217,3 +217,32 @@ psp_mac: 6 bytes  — device MAC address (used in auth token)
 **If we can get pkey + psp_id + psp_mac from ANY method, the POC is 100% buildable.**
 The simplest path: use the patched VAIO client in a VM to register once, then extract keys.
 Everything else is fully understood.
+
+---
+
+## STEP 0: Wake-on-LAN (Pre-Discovery)
+
+Source: Reddit u/GreenPRanger — confirmed working on stock and CFW PS3.
+
+The PS3 supports Wake-on-LAN on port 9293 when **Remote Play Standby** is enabled
+and at least **one remote play device is registered**.
+
+**How it works:**
+- Standard WOL magic packet (6x `0xFF` + 16x target MAC = 102 bytes)
+- Sent as **UDP broadcast** to port **9293** (same port as PREMO protocol)
+- PS3 NIC stays semi-active in standby — responds even when PS3 appears fully off
+- Broadcast address = subnet broadcast (e.g., `192.168.1.255` for a `/24`)
+
+**Requirements:**
+- Remote Play Standby must be enabled: PS3 → Settings → Remote Play Settings → Remote Play Standby
+- At least one device must be registered (PSP, Vita, or PC)
+- PSN sign-in required to enable standby (CFW/HEN users: disable syscalls temporarily, sign in, enable standby, sign out, restart)
+
+**Other consoles (for reference):**
+- PS4 WOL port: **987**
+- PS5 WOL port: **9302**
+
+**Implementation notes:**
+- Send WOL packet → wait ~5 seconds → PS3 boots into XMB → port 9293 opens for SRCH/session
+- If router blocks broadcast, try directed broadcast or unicast to PS3's last known IP
+- The PS3 does NOT need to appear in router's active device list while in standby

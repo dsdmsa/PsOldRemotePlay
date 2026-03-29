@@ -62,7 +62,21 @@ research/remoteplayps3/
 research/open-remote-py/
 research/arm-asr/
 research/fsr-mobile-shaders/
+research/repos/
 
 # Research - extracted firmware & tools (large binary data)
 research/pupps3/extraction/
+research/pupps3/decrypted_elfs/
+research/dllsun/
 research/tools/logs.txt
+research/WEB_RESEARCH_RESOURCES.md
+
+# Large C exports (Ghidra decompiled code - reference only)
+research/*.elf.c
+research/*/*.elf.c
+research/*/*/*.c
+
+# Heap dumps and memory captures
+*.hprof
+*.bin
+*.dmg
