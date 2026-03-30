@@ -48,7 +48,7 @@ class JvmPremoSession(private val crypto: PremoCrypto, private val logger: Premo
         authToken: String,
         aesKey: ByteArray,
         aesIv: ByteArray,
-        onPacket: (StreamPacket) -> Unit
+        onPacket: suspend (StreamPacket) -> Unit
     ) = withContext(Dispatchers.IO) {
         try {
             val sock = Socket(ps3Ip, PremoConstants.PORT)
@@ -153,7 +153,7 @@ class JvmPremoSession(private val crypto: PremoCrypto, private val logger: Premo
         authToken: String,
         aesKey: ByteArray,
         aesIv: ByteArray,
-        onPacket: (StreamPacket) -> Unit
+        onPacket: suspend (StreamPacket) -> Unit
     ) = withContext(Dispatchers.IO) {
         try {
             val sock = Socket(ps3Ip, PremoConstants.PORT)

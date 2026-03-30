@@ -29,7 +29,7 @@ interface PremoSessionHandler {
         authToken: String,
         aesKey: ByteArray,    // for packet decryption
         aesIv: ByteArray,     // for packet decryption (fresh copy per packet)
-        onPacket: (StreamPacket) -> Unit
+        onPacket: suspend (StreamPacket) -> Unit
     )
     suspend fun startAudioStream(
         ps3Ip: String,
@@ -37,7 +37,7 @@ interface PremoSessionHandler {
         authToken: String,
         aesKey: ByteArray,
         aesIv: ByteArray,
-        onPacket: (StreamPacket) -> Unit
+        onPacket: suspend (StreamPacket) -> Unit
     )
     fun disconnect()
 }

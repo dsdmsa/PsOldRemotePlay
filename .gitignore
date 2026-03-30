@@ -64,6 +64,9 @@ research/arm-asr/
 research/fsr-mobile-shaders/
 research/repos/
 
+# Research - third-party proprietary software
+research/PS3 Remote Play on PC + Patch/
+
 # Research - extracted firmware & tools (large binary data)
 research/pupps3/extraction/
 research/pupps3/decrypted_elfs/

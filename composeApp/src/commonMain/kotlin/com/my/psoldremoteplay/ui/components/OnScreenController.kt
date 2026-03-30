@@ -167,7 +167,7 @@ private fun AnalogStickController(onMove: (x: Float, y: Float) -> Unit) {
             modifier = Modifier
                 .size(16.dp)
                 .background(Color.Green.copy(alpha = 0.5f), shape = CircleShape)
-                .offset(dp = (offsetX * 20).dp, y = (offsetY * 20).dp)
+                .offset(x = (offsetX * 20).dp, y = (offsetY * 20).dp)
         )
     }
 }

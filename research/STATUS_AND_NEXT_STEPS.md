@@ -170,7 +170,41 @@ The sole remaining unknown is the 8-byte value XOR'd into the IV. From code trac
 1. **PS3MAPI memory peek during registration** — Read `0x01D15818` while PS3 shows PIN on screen
 2. **xRegistry bypass** — Inject pkey directly into `/setting/premo/psp01/key` via FTP (format documented, no checksums)
 3. **Brute-force IV context** — Run `ps3_register_bruteforce_iv.py` with 22 PIN encodings (3 attempts per session)
-4. **VAIO binary analysis** — Extract VRP.exe via Wine, open in Ghidra (x86), search for `F1 16 F0 DA`
+4. ~~**VAIO binary analysis** — Extract VRP.exe via Wine, open in Ghidra (x86), search for `F1 16 F0 DA`~~ **DONE 2026-03-29** — See below
+
+### UPDATE 2026-03-29: VAIO DLL Analysis Complete
+
+Full analysis in `research/pupps3/ghidra_findings/22_VAIO_DLL_ANALYSIS.md`.
+
+**What we did:** Installed VAIO Remote Play v1.1 via Wine, built custom C tools (`dump_vrpsdk*.c`) to load the Themida-packed `VRPSDK.dll` and scan process memory. Dumped the unpacked code section (163KB) and disassembled with objdump.
+
+**Key results:**
+- All 11 static crypto keys **confirmed matching** PS3 firmware exactly
+- AES implementation fully mapped: S-box at +0x27010, SetKey/SetIV/EncryptMultiBlock identified
+- Session key derivation visible: nonce + 17, XOR with "sess" or "chan" ASCII
+- RTTI reveals C++ classes: `CCoreRegistration`, `CAesCipher`, `CCoreCtrlSession`
+- Registration stores AES key at object+0x460, IV at object+0x470
+- **Registration key derivation code jumps into Themida VM sections** — cannot be statically analyzed
+
+**CRITICAL FINDING — PC body structure differs from PSP/Phone:**
+
+| Aspect | PSP/Phone | PC/VITA |
+|--------|-----------|---------|
+| Key material | Random 16 bytes appended to body | PIN-derived, from `param_1 + 0x184` |
+| Encrypted offset | Body[0 .. size-16] | Body[**0x1E0** .. size] |
+| Min body size | None | **0x200 (512 bytes)** |
+| Client-Type | "Phone" / "PC" | **"VITA"** |
+
+**This means the current app may have multiple bugs for PC registration:**
+1. Uses random key material — should be PIN-derived
+2. Encrypts from offset 0 — should encrypt from offset 0x1E0
+3. No 480-byte body prefix — PS3 expects header before encrypted data
+
+### Remaining Action Items (Updated)
+
+1. **Runtime hook SetKey** — Patch VRPSDK.dll SetKey (base+0x1D60) to log key/IV, run VRP.exe, trigger registration to capture actual derived values
+2. **Test PS4-style key material** — `km = PIN_as_4byte_BE + 12_zeros` with PC formula and body offset 0x1E0
+3. **Fix body structure** — Build proper 512+ byte body with 480-byte prefix before encrypted data
 
 ### Bug Fixed in App
 

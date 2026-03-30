@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **PsOldRemotePlay** — PS3 Remote Play client for Android/Desktop. Streams PS3 video/audio to modern devices using the PREMO protocol (reverse-engineered from PS3 firmware 4.90).
 
-**Status:** Session protocol fully implemented. Registration key derivation formulas VERIFIED (all 3 device types confirmed from decompiled code + PPC assembly). The sole remaining blocker is the 8-byte IV context value (traced to PIN as big-endian longlong via code, but tests fail). xRegistry bypass path available.
+**Status:** Session protocol fully implemented. Registration key derivation formulas VERIFIED (all 3 device types confirmed from decompiled code + PPC assembly). VAIO DLL analysis complete (2026-03-29): all keys confirmed, but key derivation is Themida VM-protected. **Critical finding:** PC type uses PIN-derived key material (not random) and encrypts body from offset 0x1E0 (not 0). Current app likely has multiple bugs for PC registration. xRegistry bypass path available.
 
 ## Build Commands
 
@@ -46,7 +46,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 2. **Session:** HTTP GET `/sce/premo/session` with PREMO-* headers → 200 OK with nonce
 3. **Auth:** Derive AES key/IV from pkey + nonce + SKEY0/SKEY2 → encrypt MAC → base64 auth token
 4. **Stream:** HTTP GET `/sce/premo/session/video` with SessionID + auth → 32-byte headers + payload
-5. **Registration (IV UNKNOWN):** POST `/sce/premo/regist` with AES-encrypted body → formulas verified, IV context value unsolved
+5. **Registration (MULTIPLE ISSUES):** POST `/sce/premo/regist` with AES-encrypted body → formulas verified, IV context value unsolved. VAIO analysis revealed: PC type uses PIN-derived km (not random), body encrypted from offset 0x1E0, min 512-byte body, Client-Type="VITA"
 6. **Bypass:** xRegistry.sys injection at `/setting/premo/psp01/key` via FTP to HEN PS3
 
 ### Static Crypto Keys
@@ -66,6 +66,10 @@ All in `PremoConstants.kt`. Same for all PS3 consoles. Session keys (SKEY0/1/2),
 - `research/pupps3/ghidra_findings/20_DECOMPILED_REGISTRATION_HANDLER.md` — Full decompiled registration handler
 - `research/pupps3/ghidra_findings/20_RUNTIME_MEMORY_ANALYSIS.md` — PS3MAPI runtime memory findings
 - `research/pupps3/ghidra_findings/21_RESEARCH_COMPILATION.md` — ALL research compiled (xRegistry bypass, PS4 comparison, BSS mapping)
+- `research/pupps3/ghidra_findings/22_VAIO_DLL_ANALYSIS.md` — VAIO Windows client RE (Themida unpacking, AES mapping, body structure findings)
 - `research/pupps3/ghidra_findings/08_COMPLETE_PROTOCOL_SUMMARY.md` — Full protocol reference
 - `research/tools/ps3_register_bruteforce_iv.py` — IV context brute-force script (22 encodings)
+- `research/tools/dump_vrpsdk*.c` — VAIO DLL dump/analysis tools (compile with mingw, run with Wine)
+- `research/tools/vrpsdk_dumped.bin` — Unpacked VRPSDK.dll memory dump (2.8 MB)
+- `research/tools/vrpsdk_code.bin` — Unpacked code section (163 KB, loadable in Ghidra at base 0x10001000)
 - `research/tools/` — Python/bash scripts for testing

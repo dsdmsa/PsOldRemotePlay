@@ -1,7 +1,7 @@
 package com.my.psoldremoteplay.protocol
 
+import androidx.compose.ui.graphics.ImageBitmap
 import com.my.psoldremoteplay.protocol.codec.AudioBuffer
-import com.my.psoldremoteplay.protocol.codec.VideoFrame
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,8 +32,8 @@ class StubControllerInput : ControllerInputSender {
 
 class LoggingVideoRenderer(private val logger: PremoLogger) : VideoRenderer {
     private var packetCount = 0
-    private val _currentFrame = MutableStateFlow<VideoFrame?>(null)
-    override val currentFrame: StateFlow<VideoFrame?> = _currentFrame.asStateFlow()
+    private val _currentFrame = MutableStateFlow<ImageBitmap?>(null)
+    override val currentFrame: StateFlow<ImageBitmap?> = _currentFrame.asStateFlow()
 
     override suspend fun start() {
         logger.log("VIDEO", "Video renderer started")

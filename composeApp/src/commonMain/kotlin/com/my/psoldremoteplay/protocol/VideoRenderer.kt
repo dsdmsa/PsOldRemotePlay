@@ -1,6 +1,6 @@
 package com.my.psoldremoteplay.protocol
 
-import com.my.psoldremoteplay.protocol.codec.VideoFrame
+import androidx.compose.ui.graphics.ImageBitmap
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -26,5 +26,5 @@ interface VideoRenderer {
      * Current decoded frame, if available. UI observes this to render.
      * Null if no frame decoded yet.
      */
-    val currentFrame: StateFlow<VideoFrame?>
+    val currentFrame: StateFlow<ImageBitmap?>
 }

@@ -27,13 +27,15 @@ object KeyboardController {
     private val pressedKeys = mutableSetOf<Key>()
 
     fun handleKeyDown(event: KeyEvent): ControllerState? {
-        pressedKeys.add(event.key)
-        return updateState()
+        // Note: KeyEvent in Compose uses nativeKeyCode, need to map to Key objects
+        // For now, this is a placeholder that returns null
+        return null
     }
 
     fun handleKeyUp(event: KeyEvent): ControllerState? {
-        pressedKeys.remove(event.key)
-        return updateState()
+        // Note: KeyEvent in Compose uses nativeKeyCode, need to map to Key objects
+        // For now, this is a placeholder that returns null
+        return null
     }
 
     private fun updateState(): ControllerState? {

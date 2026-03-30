@@ -169,16 +169,24 @@ class RemotePlayViewModel(private val deps: PlatformDependencies) : ViewModel() 
             deps.videoRenderer.start()
             logger.log("VIDEO", "Starting video stream...")
             deps.sessionHandler.startVideoStream(ip, sessionId, authToken, aesKey, aesIv) { packet ->
-                deps.videoRenderer.onStreamPacket(packet.rawHeader, packet.payload, false)
-                updateState { copy(videoPacketCount = videoPacketCount + 1) }
+                try {
+                    deps.videoRenderer.onStreamPacket(packet.rawHeader, packet.payload, false)
+                    updateState { copy(videoPacketCount = videoPacketCount + 1) }
+                } catch (e: Exception) {
+                    logger.error("VIDEO", "Packet processing failed: ${e.message}")
+                }
             }
 
             // Start audio in parallel
             deps.audioRenderer.start()
             logger.log("AUDIO", "Starting audio stream...")
             deps.sessionHandler.startAudioStream(ip, sessionId, authToken, aesKey, aesIv) { packet ->
-                logger.log("AUDIO", "Audio packet: ${packet.payload.size} bytes, magic: ${"%02X".format(packet.magic[1])}")
-                // Audio rendering will be handled by AudioRenderer when decoders are implemented
+                try {
+                    logger.log("AUDIO", "Audio packet: ${packet.payload.size} bytes, magic: ${"%02X".format(packet.magic[1])}")
+                    // Audio rendering will be handled by AudioRenderer when decoders are implemented
+                } catch (e: Exception) {
+                    logger.error("AUDIO", "Audio processing failed: ${e.message}")
+                }
             }
         }
     }
@@ -215,39 +223,103 @@ class RemotePlayViewModel(private val deps: PlatformDependencies) : ViewModel() 
     private fun register() {
         val s = _state.value
         val ip = cleanIp(s.ps3Ip)
-        if (ip.isBlank()) { logger.error("REGIST", "Set PS3 IP first"); return }
-        if (s.pin.length != 8) { logger.error("REGIST", "PIN must be 8 digits (shown on PS3 screen)"); return }
+        logger.log("REGIST", "========== REGISTRATION START ==========")
+        logger.log("REGIST", "Step 1: Validating inputs...")
+
+        if (ip.isBlank()) {
+            logger.error("REGIST", "VALIDATION FAILED: PS3 IP is blank. Enter PS3 IP and try again.");
+            return
+        }
+        logger.log("REGIST", "  ✓ PS3 IP valid: $ip")
+
+        if (s.pin.length != 8) {
+            logger.error("REGIST", "VALIDATION FAILED: PIN must be exactly 8 digits. You entered: '${s.pin}' (${s.pin.length} chars)");
+            return
+        }
+        logger.log("REGIST", "  ✓ PIN valid: ${s.pin} (8 digits)")
 
         val idBytes = s.deviceId.hexToByteArrayOrNull()
         val macBytes = s.deviceMac.hexToByteArrayOrNull()
-        if (idBytes == null || idBytes.size != 16) { logger.error("REGIST", "Device ID must be 32 hex chars"); return }
-        if (macBytes == null || macBytes.size != 6) { logger.error("REGIST", "MAC must be 12 hex chars"); return }
+        if (idBytes == null || idBytes.size != 16) {
+            logger.error("REGIST", "VALIDATION FAILED: Device ID must be 32 hex characters (16 bytes). You have: '${s.deviceId}' (${s.deviceId.length} chars, ${idBytes?.size ?: 0} bytes)");
+            return
+        }
+        logger.log("REGIST", "  ✓ Device ID valid: ${s.deviceId}")
 
-        viewModelScope.launch {
-            updateState { copy(statusText = "Registering with PIN ${s.pin}...") }
-            logger.log("REGIST", "Attempting registration as Phone (type 1)...")
+        if (macBytes == null || macBytes.size != 6) {
+            logger.error("REGIST", "VALIDATION FAILED: MAC must be 12 hex characters (6 bytes). You have: '${s.deviceMac}' (${s.deviceMac.length} chars, ${macBytes?.size ?: 0} bytes)");
+            return
+        }
+        logger.log("REGIST", "  ✓ Device MAC valid: ${s.deviceMac}")
 
-            val result = deps.registration.register(ip, s.pin, idBytes, macBytes, "PsOldRemotePlay", 1)
-            result.onSuccess { res ->
-                val pkeyHex = res.pkey.toHex()
-                updateState { copy(pkey = pkeyHex, ps3Mac = res.ps3Mac, ps3Nickname = res.ps3Nickname, statusText = "REGISTERED! PKey obtained") }
-                logger.log("REGIST", "=== SAVE THESE VALUES ===")
-                logger.log("REGIST", "PKey: $pkeyHex")
-                logger.log("REGIST", "PS3 MAC: ${res.ps3Mac}")
-                logger.log("REGIST", "PS3 Nickname: ${res.ps3Nickname}")
-            }
-            result.onFailure { e ->
-                updateState { copy(statusText = "Registration failed: ${e.message?.take(50)}") }
-                logger.log("REGIST", "Phone registration failed, trying PC (type 2)...")
-                val result2 = deps.registration.register(ip, s.pin, idBytes, macBytes, "PsOldRemotePlay", 2)
-                result2.onSuccess { res ->
+        logger.log("REGIST", "Step 2: All inputs valid. Starting registration process...")
+        logger.log("REGIST", "  PS3 IP: $ip")
+        logger.log("REGIST", "  PIN: ${s.pin}")
+        logger.log("REGIST", "  Device Type: Phone (type 1)")
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                updateState { copy(statusText = "Registering with PIN ${s.pin}...") }
+                logger.log("REGIST", "Step 3: Attempting registration as Phone (type 1)...")
+                logger.log("REGIST", "  Sending POST /sce/premo/regist to $ip:9293...")
+
+                val result = deps.registration.register(ip, s.pin, idBytes, macBytes, "PsOldRemotePlay", 1)
+                result.onSuccess { res ->
+                    logger.log("REGIST", "Step 4: ✅ REGISTRATION SUCCESSFUL!")
+                    logger.log("REGIST", "  HTTP Response: 200 OK")
+                    logger.log("REGIST", "  Decryption: SUCCESSFUL")
+
                     val pkeyHex = res.pkey.toHex()
-                    updateState { copy(pkey = pkeyHex, statusText = "REGISTERED (as PC)! PKey obtained") }
-                    logger.log("REGIST", "=== PKey: $pkeyHex ===")
+                    updateState { copy(pkey = pkeyHex, ps3Mac = res.ps3Mac, ps3Nickname = res.ps3Nickname, statusText = "REGISTERED! PKey obtained") }
+
+                    logger.log("REGIST", "========== REGISTRATION COMPLETE ==========")
+                    logger.log("REGIST", "✅ SUCCESS: IV CONTEXT ENCODING IS CORRECT!")
+                    logger.log("REGIST", "=== SAVE THESE VALUES ===")
+                    logger.log("REGIST", "PKey: $pkeyHex")
+                    logger.log("REGIST", "PS3 MAC: ${res.ps3Mac}")
+                    logger.log("REGIST", "PS3 Nickname: ${res.ps3Nickname}")
+                    logger.log("REGIST", "Device ID: ${s.deviceId}")
+                    logger.log("REGIST", "Device MAC: ${s.deviceMac}")
                 }
-                result2.onFailure {
-                    logger.error("REGIST", "Both Phone and PC registration failed")
+                result.onFailure { e ->
+                    logger.error("REGIST", "Step 4: ❌ Phone (type 1) registration FAILED")
+                    logger.log("REGIST", "  Error: ${e.message}")
+                    logger.log("REGIST", "  Cause: ${e.cause?.message ?: "Unknown"}")
+
+                    updateState { copy(statusText = "Registration failed: ${e.message?.take(50)}") }
+                    logger.log("REGIST", "Step 5: Attempting registration as PC (type 2)...")
+                    logger.log("REGIST", "  This might work if PS3 is configured for PC device...")
+
+                    val result2 = deps.registration.register(ip, s.pin, idBytes, macBytes, "PsOldRemotePlay", 2)
+                    result2.onSuccess { res ->
+                        logger.log("REGIST", "Step 5: ✅ PC (type 2) registration SUCCESSFUL!")
+                        val pkeyHex = res.pkey.toHex()
+                        updateState { copy(pkey = pkeyHex, statusText = "REGISTERED (as PC)! PKey obtained") }
+                        logger.log("REGIST", "========== REGISTRATION COMPLETE ==========")
+                        logger.log("REGIST", "✅ SUCCESS: IV CONTEXT ENCODING IS CORRECT!")
+                        logger.log("REGIST", "PKey: $pkeyHex")
+                        logger.log("REGIST", "PS3 MAC: ${res.ps3Mac}")
+                    }
+                    result2.onFailure { e2 ->
+                        logger.error("REGIST", "Step 5: ❌ PC (type 2) registration FAILED")
+                        logger.log("REGIST", "  Error: ${e2.message}")
+                        logger.error("REGIST", "❌ BOTH Phone and PC registration failed")
+                        logger.log("REGIST", "========== REGISTRATION FAILED ==========")
+                        logger.log("REGIST", "Possible reasons:")
+                        logger.log("REGIST", "  1. PS3 is NOT in registration mode (PIN not shown on TV screen)")
+                        logger.log("REGIST", "  2. Not connected to PS3's registration WiFi (PS3REGIST_XXXX)")
+                        logger.log("REGIST", "  3. PIN on TV is incorrect or changed")
+                        logger.log("REGIST", "  4. IV context encoding (PS4 formula) is WRONG")
+                        logger.log("REGIST", "Next steps: Try Priority 2 (constant context search)")
+                    }
                 }
+            } catch (e: Exception) {
+                logger.error("REGIST", "❌ EXCEPTION DURING REGISTRATION: ${e.message}")
+                logger.log("REGIST", "Stack trace (first 5 lines):")
+                e.stackTrace.take(5).forEach {
+                    logger.log("REGIST", "  at ${it.className}.${it.methodName}(${it.fileName}:${it.lineNumber})")
+                }
+                updateState { copy(statusText = "Registration crashed: ${e.message?.take(50)}") }
             }
         }
     }
@@ -275,8 +347,19 @@ class RemotePlayViewModel(private val deps: PlatformDependencies) : ViewModel() 
             val prefix = if (entry.isError) "[ERROR:${entry.tag}]" else "[${entry.tag}]"
             "[${entry.timestamp}]$prefix ${entry.message}"
         }
-        viewModelScope.launch {
-            _effects.send(RemotePlayEffect.CopyToClipboard(text))
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Try to save to file as fallback
+                val homeDir = System.getProperty("user.home")
+                val logsFile = java.io.File("$homeDir/ps3_registration_logs.txt")
+                logsFile.writeText(text)
+                println("Logs saved to: ${logsFile.absolutePath}")
+
+                // Try to copy to clipboard
+                _effects.send(RemotePlayEffect.CopyToClipboard(text))
+            } catch (e: Exception) {
+                println("Error saving logs: ${e.message}")
+            }
         }
     }
 
@@ -306,9 +389,10 @@ class RemotePlayViewModel(private val deps: PlatformDependencies) : ViewModel() 
 }
 
 private fun currentTimestamp(): String {
-    // Simple cross-platform timestamp — platform can override via logger
-    val millis = kotlinx.datetime.Clock.System.now()
-    return millis.toString().substringAfter("T").substringBefore("Z").take(12)
+    // Simple timestamp using System.currentTimeMillis() for desktop compatibility
+    val ms = System.currentTimeMillis()
+    val sdf = java.text.SimpleDateFormat("HH:mm:ss.SSS")
+    return sdf.format(java.util.Date(ms))
 }
 
 private fun String.hexToByteArrayOrNull(): ByteArray? {

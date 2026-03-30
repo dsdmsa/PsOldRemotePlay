@@ -59,6 +59,9 @@ Deep analysis of `*(param_1 + 0x38)` — the 8-byte IV XOR context value. Traces
 ### [21 — Research Compilation (ALL FINDINGS)](./21_RESEARCH_COMPILATION.md)
 **Comprehensive compilation** of all research: xRegistry.sys bypass procedure, open-rp source analysis (registration completely skipped), PS3 AES-CBC IV behavior, WiFi AP details, PS3MAPI capabilities/limitations on HEN, ELF segment layout, BSS memory mapping behavior, and prioritized action plan.
 
+### [22 — VAIO DLL Analysis (VRPSDK.dll)](./22_VAIO_DLL_ANALYSIS.md)
+**VAIO Remote Play Windows client reverse engineering.** Installed v1.1 via Wine, built custom C dump tools to bypass Themida packing. All 11 static crypto keys confirmed matching PS3 firmware. AES implementation fully mapped (S-box at +0x27010, SetKey at 0x1D60, SetIV at 0x1010). Session key derivation visible (nonce+17, XOR "sess"/"chan"). Registration key derivation jumps into **Themida VM-protected code** — cannot be statically analyzed. RTTI reveals `CCoreRegistration`, `CAesCipher` classes. Registration object stores key at +0x460, IV at +0x470. **Critical finding:** PC type registration differs from PSP/Phone — key material is PIN-derived (not random), body encrypted from offset 0x1E0 (not 0), minimum 512-byte body. Tools in `research/tools/dump_vrpsdk*.c`.
+
 ---
 
 ## Still Need to Investigate
