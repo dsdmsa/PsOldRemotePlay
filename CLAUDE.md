@@ -4,41 +4,72 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**PsOldRemotePlay** — PS3 Remote Play client for Android/Desktop. Streams PS3 video/audio to modern devices using the PREMO protocol (reverse-engineered from PS3 firmware 4.90).
+**PsRemotePlay** — Modular PlayStation streaming platform for Android/Desktop. Currently supports PS3 Remote Play via PREMO protocol (reverse-engineered from PS3 firmware 4.90). Architecture supports future PS4/PS5/PS2 streaming modules.
 
 **Status:** Session protocol fully implemented. Registration key derivation formulas VERIFIED (all 3 device types confirmed from decompiled code + PPC assembly). VAIO DLL analysis complete (2026-03-29): all keys confirmed, but key derivation is Themida VM-protected. **Critical finding:** PC type uses PIN-derived key material (not random) and encrypts body from offset 0x1E0 (not 0). Current app likely has multiple bugs for PC registration. xRegistry bypass path available.
 
 ## Build Commands
 
 ```bash
-./gradlew :composeApp:run                        # Run desktop app
-./gradlew :composeApp:compileKotlinDesktop        # Compile desktop only
-./gradlew :composeApp:compileDebugKotlinAndroid   # Compile Android
-./gradlew :composeApp:assembleDebug               # Build Android APK
-./gradlew :composeApp:desktopTest                 # Run desktop tests
+# PS3 Remote Play
+./gradlew :app:ps3:run                            # Run PS3 desktop app
+./gradlew :app:ps3:assembleDebug                  # Build PS3 Android APK
+
+# PS2 Streaming
+./gradlew :app:ps2server:run                      # Run PS2 streaming server (desktop)
+./gradlew :app:ps2client:run                      # Run PS2 client (desktop test)
+./gradlew :app:ps2client:assembleDebug            # Build PS2 Android client APK
+
+# Module compilation
+./gradlew :feature:ps3:compileKotlinDesktop       # Compile PS3 feature module
+./gradlew :feature:ps2:compileKotlinDesktop       # Compile PS2 feature module
+./gradlew :core:streaming:compileKotlinDesktop    # Compile core streaming module
 ```
 
 ## Architecture
 
-**MVI (Model-View-Intent)** with Kotlin Multiplatform + Compose Multiplatform. Interface-based DI.
+**MVI (Model-View-Intent)** with Kotlin Multiplatform + Compose Multiplatform. Interface-based DI. Multi-module architecture.
 
-### Layers
+### Module Structure
 
-- **protocol/** (commonMain) — Protocol interfaces, data classes, constants, crypto keys. Platform-agnostic.
-- **presentation/** (commonMain) — `RemotePlayState`, `RemotePlayIntent`, `RemotePlayEffect`, `RemotePlayViewModel` (MVI loop).
-- **ui/** (commonMain) — Shared Compose UI with responsive layout. Components: `ControlPanel`, `VideoSurface`, `LogPanel`.
-- **di/** — `PlatformDependencies` interface in commonMain. `DesktopDependencies` and `AndroidDependencies` wire platform implementations.
+```
+:core:streaming     — Shared interfaces: Crypto, Logger, VideoRenderer, AudioRenderer, codecs, input, upscale
+:core:ui            — Shared Compose components: VideoSurface, LogPanel, OnScreenController
+:feature:ps3        — PS3 PREMO protocol, Ps3ViewModel, PS3-specific UI, platform impls
+:feature:ps2        — PS2 streaming protocol, server/client ViewModels, UI, platform impls
+:app:ps3            — PS3 Remote Play application (entry points, dependency wiring)
+:app:ps2server      — PS2 Streaming Server (desktop only, launches PCSX2 + FFmpeg + TCP server)
+:app:ps2client      — PS2 Streaming Client (Android + desktop for testing + iOS stubs)
+```
 
-### Key Interfaces (protocol/)
+**Dependency graph:** `app:ps3 → feature:ps3 → core:streaming` and `feature:ps3 → core:ui → core:streaming`
 
-| Interface | Purpose | Desktop Impl | Android Impl |
-|-----------|---------|-------------|--------------|
-| `PremoCrypto` | AES-128-CBC, Base64, random | `JvmPremoCrypto` | `AndroidPremoCrypto` |
-| `Ps3Discoverer` | UDP SRCH/RESP discovery | `JvmPs3Discoverer` | `AndroidPs3Discoverer` |
-| `PremoSessionHandler` | HTTP session + streaming | `JvmPremoSession` | `AndroidPremoSession` |
-| `PremoRegistration` | Device registration | `JvmPremoRegistration` | `StubRegistration` |
-| `VideoRenderer` | Video packet handling | `LoggingVideoRenderer` | `LoggingVideoRenderer` |
-| `ControllerInputSender` | Controller input to PS3 | `StubControllerInput` | `StubControllerInput` |
+### Package Convention
+
+- `com.my.psremoteplay.core.streaming` — shared streaming interfaces
+- `com.my.psremoteplay.core.ui.components` — shared Compose components
+- `com.my.psremoteplay.feature.ps3.protocol` — PREMO protocol
+- `com.my.psremoteplay.feature.ps3.presentation` — PS3 MVI (Ps3State, Ps3Intent, Ps3ViewModel)
+- `com.my.psremoteplay.feature.ps3.ui` — PS3 screens (Ps3Screen, Ps3ControlPanel)
+- `com.my.psremoteplay.feature.ps3.di` — PS3 DI (Ps3Dependencies, DesktopPs3Dependencies, AndroidPs3Dependencies)
+- `com.my.psremoteplay.feature.ps3.platform` — PS3 platform impls (JvmPremoSession, etc.)
+
+### DI Architecture
+
+**Core layer:** `StreamingDependencies` (crypto, videoDecoder, audioDecoder, videoRenderer, audioRenderer, upscaleFilter, logger)
+**Feature layer:** `Ps3Dependencies` (streaming + discoverer, sessionHandler, registration, controllerInput)
+**Platform wiring:** `DesktopPs3Dependencies`, `AndroidPs3Dependencies` implement `Ps3Dependencies`
+
+### Key Interfaces
+
+| Module | Interface | Purpose |
+|--------|-----------|---------|
+| core:streaming | `Crypto` | AES-128-CBC, Base64, random |
+| core:streaming | `VideoRenderer` | Video frame display (StateFlow<ImageBitmap?>) |
+| core:streaming | `ControllerInputSender` | Gamepad input (generic params) |
+| feature:ps3 | `Ps3Discoverer` | UDP SRCH/RESP discovery |
+| feature:ps3 | `PremoSessionHandler` | HTTP session + streaming |
+| feature:ps3 | `PremoRegistration` | Device registration |
 
 ### Protocol Flow
 

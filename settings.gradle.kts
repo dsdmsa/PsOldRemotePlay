@@ -1,4 +1,4 @@
-rootProject.name = "PsOldRemotePlay"
+rootProject.name = "PsRemotePlay"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
@@ -28,4 +28,10 @@ dependencyResolutionManagement {
     }
 }
 
-include(":composeApp")
+include(":core:streaming")
+include(":core:ui")
+include(":feature:ps3")
+include(":app:ps3")
+include(":feature:ps2")
+include(":app:ps2server")
+include(":app:ps2client")
