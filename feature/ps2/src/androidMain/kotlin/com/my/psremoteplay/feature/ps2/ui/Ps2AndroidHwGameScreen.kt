@@ -37,8 +37,10 @@ fun Ps2AndroidHwGameScreen(
     onSurfaceDestroyed: () -> Unit,
     onControllerState: (ControllerState) -> Unit,
     onClose: () -> Unit,
+    onReconnect: () -> Unit = {},
     statusText: String = "",
     frameCount: Int = 0,
+    isError: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     var controllerState by remember { mutableStateOf(ControllerState()) }
@@ -65,17 +67,29 @@ fun Ps2AndroidHwGameScreen(
             onSurfaceDestroyed = onSurfaceDestroyed
         )
 
-        // Status overlay (before stream starts)
-        if (frameCount == 0) {
+        // Status overlay (before stream starts or on error)
+        if (frameCount == 0 || isError) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    statusText.ifEmpty { "Waiting for H.264 stream..." },
-                    color = Color.Cyan, fontSize = 16.sp, fontFamily = FontFamily.Monospace
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        statusText.ifEmpty { "Waiting for H.264 stream..." },
+                        color = if (isError) Color.Red else Color.Cyan,
+                        fontSize = 16.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Button(
+                        onClick = onReconnect,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan.copy(alpha = 0.3f))
+                    ) {
+                        Text("Retry Connection", color = Color.White, fontFamily = FontFamily.Monospace)
+                    }
+                }
             }
         }
 
-        // Touch zones: left half = D-pad/left stick, right half = face buttons/right stick
+        // Touch zones: only active during streaming (hidden on error so retry button is tappable)
+        if (frameCount > 0 && !isError)
         Row(Modifier.fillMaxSize()) {
             HwStickTouchZone(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
@@ -106,7 +120,8 @@ fun Ps2AndroidHwGameScreen(
             )
         }
 
-        // Bottom bar: shoulder buttons + Select/Start
+        // Bottom bar: shoulder buttons + Select/Start (only during streaming)
+        if (frameCount > 0 && !isError)
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -128,14 +143,26 @@ fun Ps2AndroidHwGameScreen(
             }
         }
 
-        // Close button
-        Button(
-            onClick = onClose,
-            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).size(36.dp),
-            shape = CircleShape,
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.5f)),
-            contentPadding = PaddingValues(0.dp)
-        ) { Text("X", color = Color.White, fontSize = 14.sp) }
+        // Top-right buttons: reconnect + close
+        Row(
+            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Button(
+                onClick = onReconnect,
+                modifier = Modifier.size(36.dp),
+                shape = CircleShape,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan.copy(alpha = 0.4f)),
+                contentPadding = PaddingValues(0.dp)
+            ) { Text("↻", color = Color.White, fontSize = 16.sp) }
+            Button(
+                onClick = onClose,
+                modifier = Modifier.size(36.dp),
+                shape = CircleShape,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.5f)),
+                contentPadding = PaddingValues(0.dp)
+            ) { Text("X", color = Color.White, fontSize = 14.sp) }
+        }
 
         // Performance overlay
         if (frameCount > 0) {

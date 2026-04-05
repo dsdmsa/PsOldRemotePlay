@@ -82,13 +82,13 @@ object Ps2Protocol {
             "Expected at least $CONTROLLER_PAYLOAD_SIZE bytes, got ${bytes.size}"
         }
 
-        val buttons = (bytes[0].toInt() and 0xFF shl 24) or
-                (bytes[1].toInt() and 0xFF shl 16) or
-                (bytes[2].toInt() and 0xFF shl 8) or
+        val buttons = ((bytes[0].toInt() and 0xFF) shl 24) or
+                ((bytes[1].toInt() and 0xFF) shl 16) or
+                ((bytes[2].toInt() and 0xFF) shl 8) or
                 (bytes[3].toInt() and 0xFF)
 
         fun readShort(offset: Int): Short =
-            ((bytes[offset].toInt() and 0xFF shl 8) or (bytes[offset + 1].toInt() and 0xFF)).toShort()
+            (((bytes[offset].toInt() and 0xFF) shl 8) or (bytes[offset + 1].toInt() and 0xFF)).toShort()
 
         fun shortToFloat(s: Short): Float = s.toFloat() / 32767f
 
@@ -130,13 +130,12 @@ class FrameReader {
     fun poll(): Pair<Byte, ByteArray>? {
         if (writePos < 4) return null
 
-        val frameLength = (buffer[0].toInt() and 0xFF shl 24) or
-                (buffer[1].toInt() and 0xFF shl 16) or
-                (buffer[2].toInt() and 0xFF shl 8) or
+        val frameLength = ((buffer[0].toInt() and 0xFF) shl 24) or
+                ((buffer[1].toInt() and 0xFF) shl 16) or
+                ((buffer[2].toInt() and 0xFF) shl 8) or
                 (buffer[3].toInt() and 0xFF)
 
-        if (frameLength <= 0) {
-            // Corrupt data -- skip the 4-byte header
+        if (frameLength <= 0 || frameLength > MAX_FRAME_SIZE) {
             compact(4)
             return null
         }
@@ -160,11 +159,21 @@ class FrameReader {
     }
 
     private fun ensureCapacity(needed: Int) {
+        if (needed > MAX_FRAME_SIZE) {
+            // Corrupt or malicious frame — reset buffer
+            writePos = 0
+            return
+        }
         if (needed <= buffer.size) return
         var newSize = buffer.size
         while (newSize < needed) newSize *= 2
+        newSize = newSize.coerceAtMost(MAX_FRAME_SIZE)
         val newBuffer = ByteArray(newSize)
         buffer.copyInto(newBuffer)
         buffer = newBuffer
+    }
+
+    private companion object {
+        const val MAX_FRAME_SIZE = 10 * 1024 * 1024 // 10MB
     }
 }

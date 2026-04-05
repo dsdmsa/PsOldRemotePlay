@@ -126,17 +126,53 @@ class Ps2ServerViewModel(private val deps: Ps2ServerDependencies) : ViewModel() 
         for (bit in listOf(0x0001, 0x0002, 0x0004, 0x0008, 0x0010, 0x0020, 0x0040, 0x0080,
             0x0100, 0x0200, 0x0400, 0x0800, 0x1000, 0x2000, 0x4000, 0x8000)) {
             if (changed and bit != 0) {
-                if (newButtons and bit != 0) deps.injectButtonPress(bit)
-                else deps.injectButtonRelease(bit)
+                val name = buttonName(bit)
+                if (newButtons and bit != 0) {
+                    logger.log("INPUT", "PRESS $name (0x${bit.toString(16)})")
+                    deps.injectButtonPress(bit)
+                } else {
+                    logger.log("INPUT", "RELEASE $name (0x${bit.toString(16)})")
+                    deps.injectButtonRelease(bit)
+                }
             }
         }
         previousButtons = newButtons
 
         // Handle analog sticks (digital threshold)
+        val deadzone = 0.15f
+        val hasSignificantStick =
+            kotlin.math.abs(state.leftStickX) > deadzone || kotlin.math.abs(state.leftStickY) > deadzone ||
+            kotlin.math.abs(state.rightStickX) > deadzone || kotlin.math.abs(state.rightStickY) > deadzone
+        if (hasSignificantStick) {
+            logger.log("INPUT", "Sticks L=(%.2f,%.2f) R=(%.2f,%.2f)".format(
+                state.leftStickX, state.leftStickY,
+                state.rightStickX, state.rightStickY))
+        }
         deps.injectStickState(state)
     }
 
+    private fun buttonName(bit: Int): String = when (bit) {
+        com.my.psremoteplay.core.streaming.input.ControllerButtons.CROSS -> "CROSS"
+        com.my.psremoteplay.core.streaming.input.ControllerButtons.CIRCLE -> "CIRCLE"
+        com.my.psremoteplay.core.streaming.input.ControllerButtons.SQUARE -> "SQUARE"
+        com.my.psremoteplay.core.streaming.input.ControllerButtons.TRIANGLE -> "TRIANGLE"
+        com.my.psremoteplay.core.streaming.input.ControllerButtons.L1 -> "L1"
+        com.my.psremoteplay.core.streaming.input.ControllerButtons.R1 -> "R1"
+        com.my.psremoteplay.core.streaming.input.ControllerButtons.L2 -> "L2"
+        com.my.psremoteplay.core.streaming.input.ControllerButtons.R2 -> "R2"
+        com.my.psremoteplay.core.streaming.input.ControllerButtons.SELECT -> "SELECT"
+        com.my.psremoteplay.core.streaming.input.ControllerButtons.START -> "START"
+        com.my.psremoteplay.core.streaming.input.ControllerButtons.L3 -> "L3"
+        com.my.psremoteplay.core.streaming.input.ControllerButtons.R3 -> "R3"
+        com.my.psremoteplay.core.streaming.input.ControllerButtons.UP -> "UP"
+        com.my.psremoteplay.core.streaming.input.ControllerButtons.DOWN -> "DOWN"
+        com.my.psremoteplay.core.streaming.input.ControllerButtons.LEFT -> "LEFT"
+        com.my.psremoteplay.core.streaming.input.ControllerButtons.RIGHT -> "RIGHT"
+        else -> "0x${bit.toString(16)}"
+    }
+
     private fun stopAll() {
+        if (_state.value.isServerRunning == false) return
         viewModelScope.launch {
             logger.log("SERVER", "=== STOPPING ALL ===")
             deps.stopControlServer()

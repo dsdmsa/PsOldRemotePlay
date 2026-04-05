@@ -13,7 +13,7 @@ class Pcsx2Launcher(private val logger: Logger) {
         return try {
             logger.log("PCSX2", "Launching: $pcsx2Path")
             logger.log("PCSX2", "Game: $gamePath")
-            val pb = ProcessBuilder(pcsx2Path, "-nogui", "-batch", "-fullscreen", gamePath)
+            val pb = ProcessBuilder(pcsx2Path, "-batch", gamePath)
             pb.redirectErrorStream(true)
             process = pb.start()
             // Read output in background thread to prevent blocking
@@ -44,4 +44,5 @@ class Pcsx2Launcher(private val logger: Logger) {
     }
 
     fun isRunning(): Boolean = process?.isAlive == true
+    fun getPid(): Long = process?.pid() ?: -1
 }

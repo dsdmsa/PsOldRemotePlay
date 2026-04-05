@@ -52,8 +52,14 @@ class DesktopPs2ServerDependencies(
         StreamingPreset.H264_HW -> ScreenCaptureKitServer(logger)
     }
 
-    override fun launchEmulator(emulatorPath: String, gamePath: String): Boolean =
-        pcsx2Launcher.launch(emulatorPath, gamePath)
+    override fun launchEmulator(emulatorPath: String, gamePath: String): Boolean {
+        val ok = pcsx2Launcher.launch(emulatorPath, gamePath)
+        if (ok) {
+            val pid = pcsx2Launcher.getPid()
+            if (pid > 0) keyInjector.setTargetPid(pid)
+        }
+        return ok
+    }
     override fun stopEmulator() = pcsx2Launcher.stop()
     override fun isEmulatorRunning(): Boolean = pcsx2Launcher.isRunning()
 

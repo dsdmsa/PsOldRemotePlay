@@ -98,9 +98,14 @@ class AndroidPs2ClientDependencies(
     }
 
     private var controlSocket: Socket? = null
+    private var readerThread: Thread? = null
 
     override fun connectControl(ip: String, port: Int, onServerInfo: (String) -> Unit): Boolean {
         return try {
+            // Close existing socket if reconnecting
+            try { controlSocket?.close() } catch (_: Exception) {}
+            controlSocket = null
+
             val s = Socket(ip, port)
             controlSocket = s
             val helloPayload = """{"name":"Android Client"}""".toByteArray()
@@ -108,7 +113,7 @@ class AndroidPs2ClientDependencies(
             s.getOutputStream().write(helloFrame)
             s.getOutputStream().flush()
 
-            Thread {
+            readerThread = Thread {
                 try {
                     val input = DataInputStream(s.getInputStream())
                     while (!s.isClosed) {
@@ -138,6 +143,9 @@ class AndroidPs2ClientDependencies(
     }
 
     override fun disconnectControl() {
+        readerThread?.interrupt()
+        try { readerThread?.join(2000) } catch (_: Exception) {}
+        readerThread = null
         try { controlSocket?.close() } catch (_: Exception) {}
         controlSocket = null
     }

@@ -65,27 +65,18 @@ class MainActivity : ComponentActivity() {
 
             val state by vm.state.collectAsState()
 
-            if (state.usesSurfaceRendering) {
-                // Hardware-accelerated path: SurfaceView + MediaCodec (zero-copy)
-                Ps2AndroidHwGameScreen(
-                    onSurfaceAvailable = { surface -> deps.setSurface(surface) },
-                    onSurfaceDestroyed = { deps.setSurface(null) },
-                    onControllerState = { vm.onIntent(Ps2ClientIntent.ControllerInput(it)) },
-                    onClose = { finish() },
-                    statusText = state.statusText,
-                    frameCount = state.videoFrameCount
-                )
-            } else {
-                // Software path: ImageBitmap + Compose Image (legacy/JPEG presets)
-                val currentFrame by vm.currentFrame.collectAsState()
-                Ps2AndroidGameScreen(
-                    currentFrame = currentFrame,
-                    onControllerState = { vm.onIntent(Ps2ClientIntent.ControllerInput(it)) },
-                    onClose = { finish() },
-                    statusText = state.statusText,
-                    frameCount = state.videoFrameCount
-                )
-            }
+            // Always use HW screen for H264_HW preset — shows retry button on error,
+            // FSR upscaling during streaming, and controller overlay when connected
+            Ps2AndroidHwGameScreen(
+                onSurfaceAvailable = { surface -> deps.setSurface(surface) },
+                onSurfaceDestroyed = { deps.setSurface(null) },
+                onControllerState = { vm.onIntent(Ps2ClientIntent.ControllerInput(it)) },
+                onClose = { finish() },
+                onReconnect = { vm.onIntent(Ps2ClientIntent.Reconnect) },
+                statusText = state.statusText,
+                frameCount = state.videoFrameCount,
+                isError = state.connectionStatus == com.my.psremoteplay.core.streaming.ConnectionStatus.Error
+            )
         }
     }
 

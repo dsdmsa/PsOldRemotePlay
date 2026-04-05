@@ -49,6 +49,7 @@ class AndroidMediaCodecClient(private val logger: Logger) : VideoStreamClient {
     private val totalDecodeNs = AtomicLong(0)
     private val statsStartTime = AtomicLong(0)
 
+    private val decoderLock = Any()
     private val nalQueue = ConcurrentLinkedQueue<ByteArray>()
 
     @Volatile private var spsData: ByteArray? = null
@@ -58,9 +59,11 @@ class AndroidMediaCodecClient(private val logger: Logger) : VideoStreamClient {
     @Volatile private var configHeight = 448
 
     fun setSurface(s: Surface?) {
-        surface = s
-        if (s != null && spsData != null && ppsData != null && !decoderConfigured) {
-            configureDecoder(spsData!!, ppsData!!, s)
+        synchronized(decoderLock) {
+            surface = s
+            if (s != null && spsData != null && ppsData != null && !decoderConfigured) {
+                configureDecoder(spsData!!, ppsData!!, s)
+            }
         }
     }
 
@@ -186,7 +189,10 @@ class AndroidMediaCodecClient(private val logger: Logger) : VideoStreamClient {
                                 framesDropped.incrementAndGet()
                                 continue
                             }
-                            // Drop non-IDR if queue is backing up
+                            // Drop non-IDR if queue is backing up.
+                            // Note: nalQueue.size on ConcurrentLinkedQueue is O(n) and not
+                            // atomic with the subsequent offer(), but the race is acceptable
+                            // here — worst case we drop one extra frame or enqueue one extra.
                             if (nalQueue.size > 3 && nalType != NAL_TYPE_IDR) {
                                 framesDropped.incrementAndGet()
                                 continue
@@ -255,6 +261,8 @@ class AndroidMediaCodecClient(private val logger: Logger) : VideoStreamClient {
         }
 
         if (lastOutputIndex >= 0) {
+            // Note: this measures releaseOutputBuffer (render-to-surface) time,
+            // not actual decode latency. Decode happens asynchronously inside MediaCodec.
             val t0 = System.nanoTime()
             codec.releaseOutputBuffer(lastOutputIndex, true)
             totalDecodeNs.addAndGet(System.nanoTime() - t0)
@@ -270,13 +278,16 @@ class AndroidMediaCodecClient(private val logger: Logger) : VideoStreamClient {
     }
 
     private fun tryConfigureDecoder() {
-        val sps = spsData ?: return
-        val pps = ppsData ?: return
-        val s = surface ?: return
-        if (decoderConfigured) return
-        configureDecoder(sps, pps, s)
+        synchronized(decoderLock) {
+            val sps = spsData ?: return
+            val pps = ppsData ?: return
+            val s = surface ?: return
+            if (decoderConfigured) return
+            configureDecoder(sps, pps, s)
+        }
     }
 
+    /** Must be called under decoderLock. */
     private fun configureDecoder(sps: ByteArray, pps: ByteArray, surface: Surface) {
         try {
             val spsPayload = stripStartCode(sps)
@@ -360,6 +371,10 @@ private class NalAccumulator {
     private var writePos = 0
     private var scanPos = 4
 
+    companion object {
+        private const val MAX_BUFFER_SIZE = 4 * 1024 * 1024 // 4MB cap
+    }
+
     fun feed(data: ByteArray, offset: Int, length: Int) {
         ensureCapacity(writePos + length)
         data.copyInto(buffer, writePos, offset, offset + length)
@@ -388,6 +403,14 @@ private class NalAccumulator {
     }
 
     private fun ensureCapacity(needed: Int) {
+        if (needed > MAX_BUFFER_SIZE) {
+            // Buffer exceeded 4MB cap — flush to prevent unbounded growth.
+            // This drops any incomplete NAL data but avoids OOM.
+            android.util.Log.w("NalAccumulator", "Buffer exceeded ${MAX_BUFFER_SIZE / 1024}KB cap, flushing")
+            writePos = 0
+            scanPos = 4
+            return
+        }
         if (needed <= buffer.size) return
         var newSize = buffer.size
         while (newSize < needed) newSize *= 2

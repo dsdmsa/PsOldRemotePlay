@@ -7,6 +7,7 @@ import com.my.psremoteplay.feature.ps2.protocol.StreamStats
 import java.io.OutputStream
 import java.net.ServerSocket
 import java.net.Socket
+import java.net.SocketTimeoutException
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
@@ -18,8 +19,10 @@ class Ps2ControlServer(private val logger: Logger) {
     private var acceptThread: Thread? = null
     @Volatile private var running = false
     private val clients = CopyOnWriteArrayList<ClientConnection>()
+    private val clientThreads = CopyOnWriteArrayList<Thread>()
     private var inputHandler: ((ControllerState) -> Unit)? = null
     private var statsHandler: ((StreamStats) -> Unit)? = null
+    private var controllerInputCount = 0L
 
     private class ClientConnection(val socket: Socket, val output: OutputStream)
 
@@ -28,13 +31,14 @@ class Ps2ControlServer(private val logger: Logger) {
         running = true
 
         try {
-            serverSocket = ServerSocket(port)
+            serverSocket = ServerSocket(port).apply { soTimeout = 2000 }
             logger.log("CONTROL", "Control server listening on port $port")
 
             acceptThread = Thread {
                 while (running) {
                     try {
                         val clientSocket = serverSocket?.accept() ?: break
+                        // No soTimeout — client connection is persistent, reads block until data arrives
                         logger.log("CONTROL", "Client connected: ${clientSocket.remoteSocketAddress}")
                         val connection = ClientConnection(clientSocket, clientSocket.getOutputStream())
                         clients.add(connection)
@@ -47,7 +51,9 @@ class Ps2ControlServer(private val logger: Logger) {
 
                         Thread {
                             readClientInput(connection)
-                        }.apply { isDaemon = true; start() }
+                        }.apply { isDaemon = true; clientThreads.add(this); start() }
+                    } catch (_: SocketTimeoutException) {
+                        continue
                     } catch (e: Exception) {
                         if (running) logger.error("CONTROL", "Accept error: ${e.message}")
                     }
@@ -80,9 +86,15 @@ class Ps2ControlServer(private val logger: Logger) {
             try { client.socket.close() } catch (_: Exception) {}
         }
         clients.clear()
+        for (t in clientThreads) {
+            t.interrupt()
+            try { t.join(2000) } catch (_: Exception) {}
+        }
+        clientThreads.clear()
         try { serverSocket?.close() } catch (_: Exception) {}
         serverSocket = null
         acceptThread = null
+        controllerInputCount = 0
         logger.log("CONTROL", "Control server stopped")
     }
 
@@ -108,7 +120,10 @@ class Ps2ControlServer(private val logger: Logger) {
                 val type = headerBuf[4]
 
                 val dataLen = payloadLen - 1
-                if (dataLen <= 0 || dataLen > 65536) continue
+                if (dataLen <= 0 || dataLen > 65536) {
+                    logger.error("CONTROL", "Protocol desync: invalid dataLen=$dataLen, closing connection")
+                    return
+                }
 
                 val payload = ByteArray(dataLen)
                 offset = 0
@@ -125,6 +140,13 @@ class Ps2ControlServer(private val logger: Logger) {
                     Ps2Protocol.CONTROLLER_STATE -> {
                         if (payload.size >= Ps2Protocol.CONTROLLER_PAYLOAD_SIZE) {
                             val state = Ps2Protocol.decodeControllerState(payload)
+                            controllerInputCount++
+                            if (controllerInputCount % 120 == 0L) {
+                                logger.log("CONTROL", "Input #$controllerInputCount btn=0x${state.buttons.toString(16)} " +
+                                    "L=(%.2f,%.2f) R=(%.2f,%.2f)".format(
+                                        state.leftStickX, state.leftStickY,
+                                        state.rightStickX, state.rightStickY))
+                            }
                             inputHandler?.invoke(state)
                         }
                     }

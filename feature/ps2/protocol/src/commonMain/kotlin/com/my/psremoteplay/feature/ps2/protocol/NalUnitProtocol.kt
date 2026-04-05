@@ -44,14 +44,14 @@ object NalUnitProtocol {
     fun unwrapPacket(data: ByteArray, length: Int): NalPacket? {
         if (length < HEADER_SIZE + 1) return null
 
-        val seq = (data[0].toInt() and 0xFF shl 24) or
-                (data[1].toInt() and 0xFF shl 16) or
-                (data[2].toInt() and 0xFF shl 8) or
+        val seq = ((data[0].toInt() and 0xFF) shl 24) or
+                ((data[1].toInt() and 0xFF) shl 16) or
+                ((data[2].toInt() and 0xFF) shl 8) or
                 (data[3].toInt() and 0xFF)
 
-        val ts = (data[4].toInt() and 0xFF shl 24) or
-                (data[5].toInt() and 0xFF shl 16) or
-                (data[6].toInt() and 0xFF shl 8) or
+        val ts = ((data[4].toInt() and 0xFF) shl 24) or
+                ((data[5].toInt() and 0xFF) shl 16) or
+                ((data[6].toInt() and 0xFF) shl 8) or
                 (data[7].toInt() and 0xFF)
 
         val flags = data[8].toInt() and 0xFF

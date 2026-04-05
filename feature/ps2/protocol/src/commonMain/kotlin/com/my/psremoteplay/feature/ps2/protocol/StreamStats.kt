@@ -35,9 +35,9 @@ data class StreamStats(
         fun decode(data: ByteArray): StreamStats {
             require(data.size >= PAYLOAD_SIZE)
             fun readInt(offset: Int): Int =
-                (data[offset].toInt() and 0xFF shl 24) or
-                        (data[offset + 1].toInt() and 0xFF shl 16) or
-                        (data[offset + 2].toInt() and 0xFF shl 8) or
+                ((data[offset].toInt() and 0xFF) shl 24) or
+                        ((data[offset + 1].toInt() and 0xFF) shl 16) or
+                        ((data[offset + 2].toInt() and 0xFF) shl 8) or
                         (data[offset + 3].toInt() and 0xFF)
             return StreamStats(
                 framesReceived = readInt(0).toLong(),

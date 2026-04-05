@@ -4,9 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**PsRemotePlay** — Modular PlayStation streaming platform for Android/Desktop. Currently supports PS3 Remote Play via PREMO protocol (reverse-engineered from PS3 firmware 4.90). Architecture supports future PS4/PS5/PS2 streaming modules.
+**PsRemotePlay** — Modular PlayStation streaming platform for Android/Desktop. Supports PS3 Remote Play (PREMO protocol) and PS2 game streaming (PCSX2 + H.264 HW encode/decode over LAN).
 
-**Status:** Session protocol fully implemented. Registration key derivation formulas VERIFIED (all 3 device types confirmed from decompiled code + PPC assembly). VAIO DLL analysis complete (2026-03-29): all keys confirmed, but key derivation is Themida VM-protected. **Critical finding:** PC type uses PIN-derived key material (not random) and encrypts body from offset 0x1E0 (not 0). Current app likely has multiple bugs for PC registration. xRegistry bypass path available.
+**PS3 Status:** Session protocol fully implemented. Registration key derivation formulas VERIFIED. xRegistry bypass path available.
+
+**PS2 Status:** End-to-end streaming working: macOS ScreenCaptureKit → VideoToolbox H.264 HW encode → UDP (MTU-chunked) → Android MediaCodec HW decode → FSR upscaling → GLSurfaceView. Controller input pipeline complete (Android PS5 DualSense → TCP → server). **Blocker:** PCSX2 input injection on macOS — CGEvents/Robot/AXUIElement don't reach PCSX2's Qt/SDL event loop. Needs PINE IPC (direct memory write) or virtual HID device approach.
 
 ## Build Commands
 
@@ -70,6 +72,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | feature:ps3 | `Ps3Discoverer` | UDP SRCH/RESP discovery |
 | feature:ps3 | `PremoSessionHandler` | HTTP session + streaming |
 | feature:ps3 | `PremoRegistration` | Device registration |
+| feature:ps2 | `VideoStreamServer` | Server-side video strategy (capture + encode + send) |
+| feature:ps2 | `VideoStreamClient` | Client-side video strategy (receive + decode + render) |
+| feature:ps2 | `Ps2Protocol` | TCP wire protocol (4-byte BE length + type + payload) |
+
+### PS2 Streaming Architecture
+
+**Server pipeline (macOS desktop):**
+```
+PCSX2 → ScreenCaptureKit (full display) → VideoToolbox H.264 HW encode
+→ UDP chunked (≤1400 bytes/packet for WiFi MTU) → Android client
+```
+
+**Client pipeline (Android):**
+```
+UDP receive → NalAccumulator (split on 00 00 00 01) → MediaCodec HW decode
+→ SurfaceTexture (OES) → FSR EASU upscale → FSR RCAS sharpen → GLSurfaceView
+```
+
+**Control channel:** TCP on port 9295. Bidirectional: server info, controller state (14-byte payload: buttons + sticks + triggers), stream stats.
+
+**Strategy pattern:** `StreamingPreset` enum selects matched server/client pairs (JPEG_TCP, JPEG_UDP, H264_RTP, H264_MPEGTS, H264_HW, PCSX2_PIPE).
+
+**Native helpers** (auto-compiled from Swift source on first use):
+- `tools/macos/screencap.swift` — ScreenCaptureKit + VideoToolbox → H.264 NAL/UDP
+- `tools/macos/keyinject.swift` — CGEvent keyboard injection (currently non-functional with PCSX2)
+
+**FSR upscaling** (Android, OpenGL ES 3.0):
+- `FsrRenderer.kt` — 3-pass GL renderer: OES blit → EASU (12-tap directional Lanczos) → RCAS (5-tap adaptive sharpen)
+- Renders 640x448 → device native resolution (e.g. 2340x1080)
+- Falls back to bilinear blit if shaders fail to compile
 
 ### Protocol Flow
 
@@ -80,9 +112,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 5. **Registration (MULTIPLE ISSUES):** POST `/sce/premo/regist` with AES-encrypted body → formulas verified, IV context value unsolved. VAIO analysis revealed: PC type uses PIN-derived km (not random), body encrypted from offset 0x1E0, min 512-byte body, Client-Type="VITA"
 6. **Bypass:** xRegistry.sys injection at `/setting/premo/psp01/key` via FTP to HEN PS3
 
-### Static Crypto Keys
+### Static Crypto Keys (PS3)
 
 All in `PremoConstants.kt`. Same for all PS3 consoles. Session keys (SKEY0/1/2), nonce XOR keys (per platform: PSP/Phone/PC/VITA), registration keys (3 platforms × XOR key + IV base).
+
+### PS2 Known Issues
+
+- **PCSX2 input injection**: CGEvent, Java Robot, postToPid all fail on macOS. PCSX2 uses Qt QKeyEvent via Cocoa responder chain; synthesized events don't reach it. Solutions: PINE IPC (memory write), Karabiner virtual HID, or Apple CoreHID (macOS 15+).
+- **Screencap app filter**: ScreenCaptureKit can't filter GPU-rendered PCSX2 windows; uses full-display capture as fallback.
+- **UDP fragmentation**: Large H.264 frames chunked to ≤1400 bytes to avoid WiFi IP fragmentation drops.
 
 ## Key Configuration
 

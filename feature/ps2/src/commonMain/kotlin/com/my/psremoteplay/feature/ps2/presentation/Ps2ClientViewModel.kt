@@ -7,6 +7,7 @@ import com.my.psremoteplay.core.streaming.ConnectionStatus
 import com.my.psremoteplay.core.streaming.LogEntry
 import com.my.psremoteplay.core.streaming.Logger
 import com.my.psremoteplay.feature.ps2.di.Ps2ClientDependencies
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -24,6 +25,7 @@ class Ps2ClientViewModel(private val deps: Ps2ClientDependencies) : ViewModel() 
     private val _effects = Channel<Ps2ClientEffect>(Channel.BUFFERED)
     val effects: Flow<Ps2ClientEffect> = _effects.receiveAsFlow()
 
+    private var streamingJob: Job? = null
     private var inputCount = 0L
 
     private val logger = object : Logger {
@@ -44,6 +46,7 @@ class Ps2ClientViewModel(private val deps: Ps2ClientDependencies) : ViewModel() 
             is Ps2ClientIntent.UpdateServerPort -> updateState { copy(serverPort = intent.port) }
             is Ps2ClientIntent.Connect -> connect()
             is Ps2ClientIntent.Disconnect -> disconnect()
+            is Ps2ClientIntent.Reconnect -> reconnect()
             is Ps2ClientIntent.ControllerInput -> handleControllerInput(intent.state)
             is Ps2ClientIntent.ToggleController -> updateState { copy(showController = !showController) }
             is Ps2ClientIntent.ClearLogs -> updateState { copy(logs = emptyList()) }
@@ -57,7 +60,7 @@ class Ps2ClientViewModel(private val deps: Ps2ClientDependencies) : ViewModel() 
             return
         }
 
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        streamingJob = viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             val strategy = deps.videoStreamClient
             val config = deps.streamConfig.copy(videoPort = s.serverPort + 1)
 
@@ -111,7 +114,23 @@ class Ps2ClientViewModel(private val deps: Ps2ClientDependencies) : ViewModel() 
         }
     }
 
+    override fun onCleared() {
+        disconnect()
+    }
+
+    private fun reconnect() {
+        logger.log("CLIENT", "Reconnecting...")
+        disconnect()
+        // Small delay to let sockets close, then reconnect
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(500)
+            connect()
+        }
+    }
+
     private fun disconnect() {
+        streamingJob?.cancel()
+        streamingJob = null
         viewModelScope.launch {
             deps.videoStreamClient.stop()
             deps.disconnectControl()
@@ -130,8 +149,15 @@ class Ps2ClientViewModel(private val deps: Ps2ClientDependencies) : ViewModel() 
     private fun handleControllerInput(state: com.my.psremoteplay.core.streaming.input.ControllerState) {
         inputCount++
         if (deps.isConnected()) deps.sendControllerState(state)
-        if (inputCount % 60 == 0L) logger.log("INPUT", "Controller input #$inputCount")
+        if (inputCount % 30 == 0L) {
+            logger.log("INPUT", "#$inputCount btn=0x${state.buttons.toString(16)} " +
+                "L=(${f2(state.leftStickX)},${f2(state.leftStickY)}) " +
+                "R=(${f2(state.rightStickX)},${f2(state.rightStickY)}) " +
+                "L2=${f2(state.l2)} R2=${f2(state.r2)}")
+        }
     }
+
+    private fun f2(v: Float): String = "%.2f".format(v)
 
     private fun addLog(tag: String, message: String, isError: Boolean) {
         val entry = LogEntry(timestamp = currentTimestamp(), tag = tag, message = message, isError = isError)

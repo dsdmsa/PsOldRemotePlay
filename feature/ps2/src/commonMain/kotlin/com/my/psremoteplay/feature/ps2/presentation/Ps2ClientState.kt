@@ -23,6 +23,7 @@ sealed interface Ps2ClientIntent {
     data object Connect : Ps2ClientIntent
     data object Disconnect : Ps2ClientIntent
     data class ControllerInput(val state: ControllerState) : Ps2ClientIntent
+    data object Reconnect : Ps2ClientIntent
     data object ToggleController : Ps2ClientIntent
     data object ClearLogs : Ps2ClientIntent
 }

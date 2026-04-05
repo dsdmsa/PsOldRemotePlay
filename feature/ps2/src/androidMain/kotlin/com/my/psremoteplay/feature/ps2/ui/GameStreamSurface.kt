@@ -1,36 +1,55 @@
 package com.my.psremoteplay.feature.ps2.ui
 
-import android.view.SurfaceHolder
-import android.view.SurfaceView
+import android.opengl.GLSurfaceView
+import android.view.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 
 /**
- * SurfaceView wrapped for Compose via AndroidView.
+ * GLSurfaceView with FSR upscaling, wrapped for Compose.
  *
- * The Surface is passed to MediaCodec for zero-copy video rendering.
- * The SurfaceView renders on a separate hardware layer below the Compose overlay,
- * so controller buttons and status text render on top without touching the video path.
+ * Pipeline: MediaCodec → SurfaceTexture (OES) → FSR EASU upscale → FSR RCAS sharpen → display.
+ *
+ * The FsrRenderer creates a Surface from SurfaceTexture and passes it to the caller
+ * via [onSurfaceAvailable]. MediaCodec decodes directly to this Surface, then the
+ * GL renderer applies FSR upscaling and sharpening before displaying.
  */
 @Composable
 fun GameStreamSurface(
     modifier: Modifier = Modifier,
-    onSurfaceAvailable: (android.view.Surface) -> Unit,
+    inputWidth: Int = 640,
+    inputHeight: Int = 448,
+    onSurfaceAvailable: (Surface) -> Unit,
     onSurfaceDestroyed: () -> Unit
 ) {
+    val context = LocalContext.current
+    val currentOnSurfaceAvailable = rememberUpdatedState(onSurfaceAvailable)
+    val currentOnSurfaceDestroyed = rememberUpdatedState(onSurfaceDestroyed)
+
+    val renderer = remember(inputWidth, inputHeight) {
+        FsrRenderer(
+            inputWidth = inputWidth,
+            inputHeight = inputHeight,
+            onSurfaceReady = { surface -> currentOnSurfaceAvailable.value(surface) },
+            onSurfaceDestroyed = { currentOnSurfaceDestroyed.value() }
+        )
+    }
+
+    DisposableEffect(renderer) {
+        onDispose { renderer.release() }
+    }
+
     AndroidView(
-        factory = { context ->
-            SurfaceView(context).apply {
-                holder.addCallback(object : SurfaceHolder.Callback {
-                    override fun surfaceCreated(holder: SurfaceHolder) {
-                        onSurfaceAvailable(holder.surface)
-                    }
-                    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
-                    override fun surfaceDestroyed(holder: SurfaceHolder) {
-                        onSurfaceDestroyed()
-                    }
-                })
+        factory = {
+            GLSurfaceView(context).apply {
+                setEGLContextClientVersion(3)
+                setRenderer(renderer)
+                renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
             }
         },
         modifier = modifier
