@@ -19,15 +19,21 @@ class Ps2ServerViewModel(private val deps: Ps2ServerDependencies) : ViewModel() 
     private val _effects = Channel<Ps2ServerEffect>(Channel.BUFFERED)
     val effects: Flow<Ps2ServerEffect> = _effects.receiveAsFlow()
 
+    init {
+        // Hook into deps logger so ALL subsystem logs (FFmpeg, control server, etc.)
+        // appear in the UI log panel — not just ViewModel-level logs.
+        deps.installLogListener { tag, message, isError ->
+            addLog(tag, message, isError)
+        }
+    }
+
     private val logger = object : Logger {
         override fun log(tag: String, message: String) {
-            addLog(tag, message, isError = false)
+            // deps.logger already forwards to addLog via the listener above
             deps.logger.log(tag, message)
         }
 
         override fun error(tag: String, message: String, throwable: Throwable?) {
-            val errMsg = "$message${throwable?.let { "\n  ${it::class.simpleName}: ${it.message}" } ?: ""}"
-            addLog(tag, errMsg, isError = true)
             deps.logger.error(tag, message, throwable)
         }
     }

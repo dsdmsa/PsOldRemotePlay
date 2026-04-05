@@ -27,5 +27,9 @@ enum class StreamingPreset(
     PCSX2_PIPE(
         "PCSX2 Direct Pipe",
         "Zero-capture-latency. Reads from PCSX2's built-in video capture pipe"
+    ),
+    H264_HW(
+        "H.264 Hardware",
+        "ScreenCaptureKit → VideoToolbox HW encode → H.264 NAL/UDP → Android MediaCodec HW decode → Surface. Lowest latency."
     );
 }

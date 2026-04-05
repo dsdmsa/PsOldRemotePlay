@@ -12,12 +12,26 @@ class DesktopPs2ServerDependencies(
     preset: StreamingPreset = StreamingPreset.JPEG_UDP
 ) : Ps2ServerDependencies {
 
+    /**
+     * Set a listener to receive ALL log messages (including from subsystems like FFmpeg,
+     * control server, etc.) in the UI. Called from ViewModel to pipe logs to the log panel.
+     */
+    var logListener: ((tag: String, message: String, isError: Boolean) -> Unit)? = null
+
     override val logger: Logger = object : Logger {
-        override fun log(tag: String, message: String) { println("[$tag] $message") }
-        override fun error(tag: String, message: String, throwable: Throwable?) {
-            System.err.println("[ERROR:$tag] $message")
-            throwable?.printStackTrace(System.err)
+        override fun log(tag: String, message: String) {
+            println("[$tag] $message")
+            logListener?.invoke(tag, message, false)
         }
+        override fun error(tag: String, message: String, throwable: Throwable?) {
+            val msg = "$message${throwable?.let { "\n  ${it::class.simpleName}: ${it.message}" } ?: ""}"
+            System.err.println("[ERROR:$tag] $msg")
+            logListener?.invoke(tag, msg, true)
+        }
+    }
+
+    override fun installLogListener(listener: (String, String, Boolean) -> Unit) {
+        logListener = listener
     }
 
     override val streamConfig = StreamConfig()
@@ -35,6 +49,7 @@ class DesktopPs2ServerDependencies(
         StreamingPreset.H264_RTP -> JavaCvRtpServer(logger)
         StreamingPreset.H264_MPEGTS -> FfmpegMpegTsServer(logger)
         StreamingPreset.PCSX2_PIPE -> Pcsx2PipeServer(logger)
+        StreamingPreset.H264_HW -> ScreenCaptureKitServer(logger)
     }
 
     override fun launchEmulator(emulatorPath: String, gamePath: String): Boolean =

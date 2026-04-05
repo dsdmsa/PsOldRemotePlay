@@ -10,6 +10,7 @@ object Ps2Protocol {
     const val VIDEO_FRAME: Byte = 0x01
     const val CONTROLLER_STATE: Byte = 0x03
     const val SERVER_INFO: Byte = 0x10
+    const val STREAM_STATS: Byte = 0x04
     const val CLIENT_HELLO: Byte = 0x20
 
     const val CONTROLLER_PAYLOAD_SIZE = 14

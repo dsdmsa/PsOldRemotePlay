@@ -57,6 +57,7 @@ class DesktopPs2ClientDependencies(
         StreamingPreset.H264_RTP -> JavaCvRtpClient(_logger)
         StreamingPreset.H264_MPEGTS -> JavaCvMpegTsClient(_logger)
         StreamingPreset.PCSX2_PIPE -> UdpJpegClient(_logger) // PCSX2 pipe outputs JPEG via UDP
+        StreamingPreset.H264_HW -> UdpJpegClient(_logger) // Desktop test fallback; HW decode is Android-only
     }
 
     // Control channel (TCP)

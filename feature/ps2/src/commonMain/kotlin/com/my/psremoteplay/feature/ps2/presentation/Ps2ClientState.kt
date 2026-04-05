@@ -13,7 +13,8 @@ data class Ps2ClientState(
     val logs: List<LogEntry> = emptyList(),
     val isStreaming: Boolean = false,
     val showController: Boolean = true,
-    val statusText: String = "Ready"
+    val statusText: String = "Ready",
+    val usesSurfaceRendering: Boolean = false
 )
 
 sealed interface Ps2ClientIntent {

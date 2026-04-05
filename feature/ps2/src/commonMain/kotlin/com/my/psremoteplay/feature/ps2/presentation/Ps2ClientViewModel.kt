@@ -83,10 +83,19 @@ class Ps2ClientViewModel(private val deps: Ps2ClientDependencies) : ViewModel() 
                 return@launch
             }
 
-            // 3. Count frames
-            launch {
-                strategy.currentFrame.collect { frame ->
-                    if (frame != null) _state.update { it.copy(videoFrameCount = it.videoFrameCount + 1) }
+            // 3. Count frames (Surface-based clients need polling; ImageBitmap clients use flow)
+            if (strategy.usesSurfaceRendering) {
+                launch {
+                    while (true) {
+                        kotlinx.coroutines.delay(500)
+                        _state.update { it.copy(videoFrameCount = strategy.decodedFrameCount.toInt()) }
+                    }
+                }
+            } else {
+                launch {
+                    strategy.currentFrame.collect { frame ->
+                        if (frame != null) _state.update { it.copy(videoFrameCount = it.videoFrameCount + 1) }
+                    }
                 }
             }
 
@@ -94,6 +103,7 @@ class Ps2ClientViewModel(private val deps: Ps2ClientDependencies) : ViewModel() 
                 copy(
                     connectionStatus = ConnectionStatus.Streaming,
                     isStreaming = true,
+                    usesSurfaceRendering = strategy.usesSurfaceRendering,
                     statusText = "Streaming [${strategy.name}] from ${s.serverIp}"
                 )
             }

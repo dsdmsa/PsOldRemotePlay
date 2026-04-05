@@ -12,8 +12,14 @@ interface VideoStreamClient {
     /** Human-readable name for logging/UI */
     val name: String
 
-    /** Decoded video frames ready for display */
+    /** Decoded video frames ready for display (null for Surface-based rendering) */
     val currentFrame: StateFlow<ImageBitmap?>
+
+    /** Whether this client renders directly to a hardware Surface (bypassing Compose) */
+    val usesSurfaceRendering: Boolean get() = false
+
+    /** Number of decoded frames (for Surface-based clients that don't emit ImageBitmap) */
+    val decodedFrameCount: Long get() = 0
 
     /** Connect to the server video stream */
     fun start(serverIp: String, config: StreamConfig): Boolean

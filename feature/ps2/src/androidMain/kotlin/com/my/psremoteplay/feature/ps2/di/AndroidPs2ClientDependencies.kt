@@ -19,7 +19,9 @@ import com.my.psremoteplay.feature.ps2.protocol.Ps2Protocol
 import com.my.psremoteplay.feature.ps2.strategy.StreamConfig
 import com.my.psremoteplay.feature.ps2.strategy.StreamingPreset
 import com.my.psremoteplay.feature.ps2.strategy.VideoStreamClient
+import com.my.psremoteplay.feature.ps2.protocol.StreamStats
 import com.my.psremoteplay.feature.ps2.strategy.client.AndroidJavaCvClient
+import com.my.psremoteplay.feature.ps2.strategy.client.AndroidMediaCodecClient
 import com.my.psremoteplay.feature.ps2.strategy.client.AndroidUdpJpegClient
 import java.io.DataInputStream
 import java.net.Socket
@@ -56,6 +58,43 @@ class AndroidPs2ClientDependencies(
         StreamingPreset.H264_RTP -> AndroidJavaCvClient(_logger, "rtp")
         StreamingPreset.H264_MPEGTS -> AndroidJavaCvClient(_logger, "mpegts")
         StreamingPreset.PCSX2_PIPE -> AndroidUdpJpegClient(_logger) // PCSX2 pipe sends JPEG via UDP
+        StreamingPreset.H264_HW -> AndroidMediaCodecClient(_logger)
+    }
+
+    /** Set the Surface for hardware-accelerated rendering (H264_HW preset only) */
+    fun setSurface(surface: android.view.Surface?) {
+        (videoStreamClient as? AndroidMediaCodecClient)?.setSurface(surface)
+    }
+
+    /** Start periodic stats reporting over control channel (H264_HW preset only) */
+    private var statsThread: Thread? = null
+
+    fun startStatsReporting() {
+        val client = videoStreamClient as? AndroidMediaCodecClient ?: return
+        statsThread = Thread {
+            try {
+                while (isConnected()) {
+                    Thread.sleep(2000)
+                    val stats = client.getStats()
+                    sendStats(stats)
+                }
+            } catch (_: InterruptedException) {}
+        }.apply { isDaemon = true; name = "stats-reporter"; start() }
+    }
+
+    fun stopStatsReporting() {
+        statsThread?.interrupt()
+        statsThread = null
+    }
+
+    private fun sendStats(stats: StreamStats) {
+        val s = controlSocket ?: return
+        if (s.isClosed) return
+        try {
+            val frame = Ps2Protocol.buildFrame(Ps2Protocol.STREAM_STATS, stats.encode())
+            s.getOutputStream().write(frame)
+            s.getOutputStream().flush()
+        } catch (_: Exception) {}
     }
 
     private var controlSocket: Socket? = null

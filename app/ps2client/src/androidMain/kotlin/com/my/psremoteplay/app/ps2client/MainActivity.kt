@@ -20,7 +20,9 @@ import com.my.psremoteplay.feature.ps2.di.AndroidPs2ClientDependencies
 import com.my.psremoteplay.feature.ps2.presentation.Ps2ClientEffect
 import com.my.psremoteplay.feature.ps2.presentation.Ps2ClientIntent
 import com.my.psremoteplay.feature.ps2.presentation.Ps2ClientViewModel
+import com.my.psremoteplay.feature.ps2.strategy.StreamingPreset
 import com.my.psremoteplay.feature.ps2.ui.Ps2AndroidGameScreen
+import com.my.psremoteplay.feature.ps2.ui.Ps2AndroidHwGameScreen
 import kotlinx.coroutines.flow.collectLatest
 
 class MainActivity : ComponentActivity() {
@@ -42,7 +44,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val deps = remember { AndroidPs2ClientDependencies() }
+            val deps = remember { AndroidPs2ClientDependencies(StreamingPreset.H264_HW) }
             val vm = viewModel { Ps2ClientViewModel(deps) }
             viewModel = vm
 
@@ -62,15 +64,28 @@ class MainActivity : ComponentActivity() {
             }
 
             val state by vm.state.collectAsState()
-            val currentFrame by vm.currentFrame.collectAsState()
 
-            Ps2AndroidGameScreen(
-                currentFrame = currentFrame,
-                onControllerState = { vm.onIntent(Ps2ClientIntent.ControllerInput(it)) },
-                onClose = { finish() },
-                statusText = state.statusText,
-                frameCount = state.videoFrameCount
-            )
+            if (state.usesSurfaceRendering) {
+                // Hardware-accelerated path: SurfaceView + MediaCodec (zero-copy)
+                Ps2AndroidHwGameScreen(
+                    onSurfaceAvailable = { surface -> deps.setSurface(surface) },
+                    onSurfaceDestroyed = { deps.setSurface(null) },
+                    onControllerState = { vm.onIntent(Ps2ClientIntent.ControllerInput(it)) },
+                    onClose = { finish() },
+                    statusText = state.statusText,
+                    frameCount = state.videoFrameCount
+                )
+            } else {
+                // Software path: ImageBitmap + Compose Image (legacy/JPEG presets)
+                val currentFrame by vm.currentFrame.collectAsState()
+                Ps2AndroidGameScreen(
+                    currentFrame = currentFrame,
+                    onControllerState = { vm.onIntent(Ps2ClientIntent.ControllerInput(it)) },
+                    onClose = { finish() },
+                    statusText = state.statusText,
+                    frameCount = state.videoFrameCount
+                )
+            }
         }
     }
 

@@ -8,13 +8,14 @@ import androidx.compose.ui.window.rememberWindowState
 import com.my.psremoteplay.feature.ps2.di.DesktopPs2ServerDependencies
 import com.my.psremoteplay.feature.ps2.presentation.Ps2ServerEffect
 import com.my.psremoteplay.feature.ps2.presentation.Ps2ServerViewModel
+import com.my.psremoteplay.feature.ps2.strategy.StreamingPreset
 import com.my.psremoteplay.feature.ps2.ui.Ps2ServerScreen
 import kotlinx.coroutines.flow.collectLatest
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 
 fun main() = application {
-    val deps = remember { DesktopPs2ServerDependencies() }
+    val deps = remember { DesktopPs2ServerDependencies(StreamingPreset.H264_HW) }
     val viewModel = remember { Ps2ServerViewModel(deps) }
 
     LaunchedEffect(Unit) {

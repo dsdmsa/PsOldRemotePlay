@@ -8,6 +8,9 @@ import com.my.psremoteplay.feature.ps2.strategy.VideoStreamServer
 interface Ps2ServerDependencies {
     val logger: Logger
 
+    /** Install a listener to receive all log messages in the UI */
+    fun installLogListener(listener: (tag: String, message: String, isError: Boolean) -> Unit) {}
+
     /** Active video stream strategy — swap to change the entire pipeline */
     val videoStreamServer: VideoStreamServer
 

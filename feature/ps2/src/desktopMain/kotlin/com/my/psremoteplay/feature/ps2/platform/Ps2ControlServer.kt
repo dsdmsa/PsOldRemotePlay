@@ -3,6 +3,7 @@ package com.my.psremoteplay.feature.ps2.platform
 import com.my.psremoteplay.core.streaming.Logger
 import com.my.psremoteplay.core.streaming.input.ControllerState
 import com.my.psremoteplay.feature.ps2.protocol.Ps2Protocol
+import com.my.psremoteplay.feature.ps2.protocol.StreamStats
 import java.io.OutputStream
 import java.net.ServerSocket
 import java.net.Socket
@@ -18,6 +19,7 @@ class Ps2ControlServer(private val logger: Logger) {
     @Volatile private var running = false
     private val clients = CopyOnWriteArrayList<ClientConnection>()
     private var inputHandler: ((ControllerState) -> Unit)? = null
+    private var statsHandler: ((StreamStats) -> Unit)? = null
 
     private class ClientConnection(val socket: Socket, val output: OutputStream)
 
@@ -59,6 +61,10 @@ class Ps2ControlServer(private val logger: Logger) {
 
     fun onClientInput(handler: (ControllerState) -> Unit) {
         inputHandler = handler
+    }
+
+    fun onStreamStats(handler: (StreamStats) -> Unit) {
+        statsHandler = handler
     }
 
     fun getClientCount(): Int = clients.size
@@ -120,6 +126,12 @@ class Ps2ControlServer(private val logger: Logger) {
                         if (payload.size >= Ps2Protocol.CONTROLLER_PAYLOAD_SIZE) {
                             val state = Ps2Protocol.decodeControllerState(payload)
                             inputHandler?.invoke(state)
+                        }
+                    }
+                    Ps2Protocol.STREAM_STATS -> {
+                        if (payload.size >= StreamStats.PAYLOAD_SIZE) {
+                            val stats = StreamStats.decode(payload)
+                            statsHandler?.invoke(stats)
                         }
                     }
                 }
