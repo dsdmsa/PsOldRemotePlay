@@ -46,6 +46,7 @@ class DesktopPs2ServerDependencies(
     override fun stopControlServer() = controlServer.stop()
     override fun isControlServerRunning(): Boolean = controlServer.isRunning()
     override fun getClientCount(): Int = controlServer.getClientCount()
+    override fun getLastClientIp(): String? = controlServer.getLastClientIp()
     override fun onClientInput(handler: (ControllerState) -> Unit) = controlServer.onClientInput(handler)
 
     override fun injectButtonPress(buttonMask: Int) {

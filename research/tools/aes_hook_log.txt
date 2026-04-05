@@ -1,0 +1,3 @@
+=== VRPSDK Registration Hook Log ===
+PIN: 12345678
+

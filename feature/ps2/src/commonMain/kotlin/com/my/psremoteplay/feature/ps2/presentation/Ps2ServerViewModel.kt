@@ -69,26 +69,38 @@ class Ps2ServerViewModel(private val deps: Ps2ServerDependencies) : ViewModel() 
             // 2. Wait for PCSX2 to start rendering
             kotlinx.coroutines.delay(3000)
 
-            // 3. Start video stream via active strategy
-            val videoStrategy = deps.videoStreamServer
-            val config = deps.streamConfig.copy(videoPort = s.serverPort + 1)
-            logger.log("SERVER", "Starting video [${videoStrategy.name}] on port ${config.videoPort}...")
-            updateState { copy(statusText = "Starting ${videoStrategy.name}...") }
-            videoStrategy.start(config)
-            updateState { copy(isCapturing = true, statusText = "${videoStrategy.name} active, starting control...") }
-
-            // 4. Start control server (TCP for controller input + server info)
+            // 3. Start control server first (TCP) — need client IP for video targeting
             logger.log("SERVER", "Starting control server on port ${s.serverPort}...")
             deps.startControlServer(s.serverPort)
-            updateState { copy(isServerRunning = true, statusText = "Streaming on port ${s.serverPort}") }
+            updateState { copy(isServerRunning = true, statusText = "Waiting for client...") }
 
-            // 5. Register controller input handler
+            // 4. Register controller input handler
             deps.onClientInput { controllerState ->
                 handleControllerInput(controllerState)
                 _state.update { it.copy(inputsReceived = it.inputsReceived + 1) }
             }
 
-            // 6. Poll client count
+            // 5. Wait for a client to connect, then get its IP for video targeting
+            logger.log("SERVER", "Waiting for client to connect...")
+            var clientIp: String? = null
+            while (clientIp == null && deps.isControlServerRunning()) {
+                clientIp = deps.getLastClientIp()
+                if (clientIp == null) kotlinx.coroutines.delay(500)
+            }
+            if (clientIp == null) return@launch
+
+            // 6. Start video stream targeting the client's IP
+            val videoStrategy = deps.videoStreamServer
+            val config = deps.streamConfig.copy(
+                videoPort = s.serverPort + 1,
+                targetIp = clientIp
+            )
+            logger.log("SERVER", "Starting video [${videoStrategy.name}] → $clientIp:${config.videoPort}...")
+            updateState { copy(statusText = "Starting ${videoStrategy.name}...") }
+            videoStrategy.start(config)
+            updateState { copy(isCapturing = true, statusText = "Streaming to $clientIp") }
+
+            // 7. Poll client count
             launch {
                 while (deps.isControlServerRunning()) {
                     updateState { copy(connectedClients = deps.getClientCount()) }

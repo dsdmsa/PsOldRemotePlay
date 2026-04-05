@@ -32,6 +32,7 @@ kotlin {
         commonMain.dependencies {
             api(projects.core.streaming)
             api(projects.core.ui)
+            api(projects.feature.ps2.protocol)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
@@ -51,12 +52,8 @@ kotlin {
             implementation("org.bytedeco:javacpp:1.5.11:linux-x86_64")
         }
 
-        androidMain.dependencies {
-            // JavaCV for H.264 decode on Android
-            implementation("org.bytedeco:javacv:1.5.11")
-            implementation("org.bytedeco:ffmpeg:7.1-1.5.11:android-arm64")
-            implementation("org.bytedeco:javacpp:1.5.11:android-arm64")
-        }
+        // Note: JavaCV removed from Android — JPEG_UDP preset uses only BitmapFactory.
+        // Re-add bytedeco deps here when testing H.264/RTP presets on Android.
     }
 }
 
@@ -67,6 +64,8 @@ android {
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
     }
+
+    // No packaging overrides needed — JavaCV removed from Android
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

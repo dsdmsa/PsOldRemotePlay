@@ -63,6 +63,11 @@ class Ps2ControlServer(private val logger: Logger) {
 
     fun getClientCount(): Int = clients.size
 
+    /** Get the IP address of the last connected client (for directing UDP video to it) */
+    fun getLastClientIp(): String? {
+        return clients.lastOrNull()?.socket?.inetAddress?.hostAddress
+    }
+
     fun stop() {
         running = false
         for (client in clients) {

@@ -24,6 +24,7 @@ interface Ps2ServerDependencies {
     fun stopControlServer()
     fun isControlServerRunning(): Boolean
     fun getClientCount(): Int
+    fun getLastClientIp(): String?
     fun onClientInput(handler: (ControllerState) -> Unit)
 
     // Input injection into emulator

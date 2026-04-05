@@ -26,13 +26,15 @@ class RobotJpegUdpServer(private val logger: Logger) : VideoStreamServer {
     private var captureThread: Thread? = null
     private var socket: DatagramSocket? = null
 
-    private var targetAddress: InetAddress = InetAddress.getByName("127.0.0.1")
+    private lateinit var targetAddress: InetAddress
 
     override fun start(config: StreamConfig) {
         if (streaming) return
         streaming = true
 
-        socket = DatagramSocket()
+        targetAddress = InetAddress.getByName(config.targetIp)
+        socket = DatagramSocket().apply { broadcast = true }
+        logger.log(name, "Sending video to ${config.targetIp}:${config.videoPort}")
 
         captureThread = Thread {
             try {
