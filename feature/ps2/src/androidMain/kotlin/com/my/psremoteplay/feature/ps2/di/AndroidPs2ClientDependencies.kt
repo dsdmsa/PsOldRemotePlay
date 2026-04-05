@@ -83,6 +83,8 @@ class AndroidPs2ClientDependencies(
                             Ps2Protocol.SERVER_INFO -> onServerInfo(String(payload))
                         }
                     }
+                } catch (_: java.io.EOFException) {
+                    // Server disconnected — normal
                 } catch (e: Exception) {
                     if (!s.isClosed) _logger.error("CONTROL", "Reader error", e)
                 }
@@ -103,16 +105,18 @@ class AndroidPs2ClientDependencies(
 
     override fun isConnected(): Boolean = controlSocket?.isClosed == false
 
+    private val sendExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
+
     override fun sendControllerState(state: ControllerState) {
         val s = controlSocket ?: return
         if (s.isClosed) return
-        try {
-            val encoded = Ps2Protocol.encodeControllerState(state)
-            val frame = Ps2Protocol.buildFrame(Ps2Protocol.CONTROLLER_STATE, encoded)
-            s.getOutputStream().write(frame)
-            s.getOutputStream().flush()
-        } catch (e: Exception) {
-            _logger.error("CONTROL", "Send failed: ${e.message}", e)
+        sendExecutor.execute {
+            try {
+                val encoded = Ps2Protocol.encodeControllerState(state)
+                val frame = Ps2Protocol.buildFrame(Ps2Protocol.CONTROLLER_STATE, encoded)
+                s.getOutputStream().write(frame)
+                s.getOutputStream().flush()
+            } catch (_: Exception) {}
         }
     }
 }

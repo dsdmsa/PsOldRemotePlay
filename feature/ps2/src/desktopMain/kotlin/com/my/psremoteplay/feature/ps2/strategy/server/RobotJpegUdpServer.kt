@@ -59,16 +59,23 @@ class RobotJpegUdpServer(private val logger: Logger) : VideoStreamServer {
                 logger.log(name, "Streaming JPEG/UDP on port ${config.videoPort}")
 
                 var windowCheckCounter = 0
+                var frameCount = 0L
+                var totalCaptureMs = 0L
+                var totalEncodeMs = 0L
+                var totalFrameMs = 0L
+
                 while (streaming) {
                     val t0 = System.currentTimeMillis()
 
-                    // Re-check window position every 2 seconds (window may move/resize)
+                    // Re-check window position every 2 seconds
                     windowCheckCounter++
                     if (windowCheckCounter % (config.fps * 2) == 0) {
                         findPcsx2WindowBounds()?.let { captureRect = it }
                     }
 
                     val screenshot = robot.createScreenCapture(captureRect)
+                    val tCapture = System.currentTimeMillis()
+
                     val scaled = BufferedImage(config.width, config.height, BufferedImage.TYPE_INT_RGB)
                     scaled.createGraphics().apply {
                         drawImage(screenshot, 0, 0, config.width, config.height, null)
@@ -80,12 +87,25 @@ class RobotJpegUdpServer(private val logger: Logger) : VideoStreamServer {
                     jpegWriter.output = ios
                     jpegWriter.write(null, IIOImage(scaled, null, null), jpegParams)
                     ios.flush(); ios.close()
+                    val tEncode = System.currentTimeMillis()
 
                     val jpegData = baos.toByteArray()
+
+                    // Performance logging every 5 seconds
+                    frameCount++
+                    totalCaptureMs += tCapture - t0
+                    totalEncodeMs += tEncode - tCapture
+                    if (frameCount % (config.fps * 5).toLong() == 0L) {
+                        val avgCapture = totalCaptureMs / frameCount
+                        val avgEncode = totalEncodeMs / frameCount
+                        val avgTotal = totalFrameMs / frameCount
+                        logger.log("PERF", "capture=${avgCapture}ms encode=${avgEncode}ms total=${avgTotal}ms fps=${frameCount * 1000 / (System.currentTimeMillis() - (t0 - avgTotal))} size=${jpegData.size / 1024}KB")
+                    }
                     val packet = DatagramPacket(jpegData, jpegData.size, targetAddress, config.videoPort)
                     try { udpSocket.send(packet) } catch (_: Exception) {}
 
                     val elapsed = System.currentTimeMillis() - t0
+                    totalFrameMs += elapsed
                     val sleep = frameIntervalMs - elapsed
                     if (sleep > 0) Thread.sleep(sleep)
                 }

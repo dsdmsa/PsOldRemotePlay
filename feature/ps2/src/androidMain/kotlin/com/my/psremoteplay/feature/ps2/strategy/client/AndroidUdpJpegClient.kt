@@ -35,6 +35,9 @@ class AndroidUdpJpegClient(private val logger: Logger) : VideoStreamClient {
 
             readerThread = Thread {
                 val buf = ByteArray(65536)
+                var frameCount = 0L
+                var totalDecodeMs = 0L
+                val startTime = System.currentTimeMillis()
                 try {
                     while (receiving) {
                         val packet = DatagramPacket(buf, buf.size)
@@ -44,8 +47,20 @@ class AndroidUdpJpegClient(private val logger: Logger) : VideoStreamClient {
 
                         val data = packet.data.copyOf(packet.length)
                         if (data.size >= 2 && data[0] == 0xFF.toByte() && data[1] == 0xD8.toByte()) {
+                            val t0 = System.currentTimeMillis()
                             val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
-                            if (bitmap != null) _currentFrame.value = bitmap.asImageBitmap()
+                            val decodeMs = System.currentTimeMillis() - t0
+                            if (bitmap != null) {
+                                _currentFrame.value = bitmap.asImageBitmap()
+                                frameCount++
+                                totalDecodeMs += decodeMs
+                                if (frameCount % 150 == 0L) {
+                                    val elapsed = System.currentTimeMillis() - startTime
+                                    val avgDecode = totalDecodeMs / frameCount
+                                    val fps = frameCount * 1000 / elapsed
+                                    logger.log("PERF", "decode=${avgDecode}ms fps=$fps size=${data.size / 1024}KB frames=$frameCount")
+                                }
+                            }
                         }
                     }
                 } catch (e: Exception) {

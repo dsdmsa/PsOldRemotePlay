@@ -35,19 +35,27 @@ class UdpJpegClient(private val logger: Logger) : VideoStreamClient {
 
             readerThread = Thread {
                 val buf = ByteArray(65536)
+                var frameCount = 0L
+                var totalDecodeMs = 0L
+                val startTime = System.currentTimeMillis()
                 try {
                     while (receiving) {
                         val packet = DatagramPacket(buf, buf.size)
                         try {
                             s.receive(packet)
-                        } catch (_: java.net.SocketTimeoutException) {
-                            continue
-                        }
+                        } catch (_: java.net.SocketTimeoutException) { continue }
 
                         val data = packet.data.copyOf(packet.length)
                         if (data.size >= 2 && data[0] == 0xFF.toByte() && data[1] == 0xD8.toByte()) {
                             try {
+                                val t0 = System.currentTimeMillis()
                                 _currentFrame.value = SkiaImage.makeFromEncoded(data).toComposeImageBitmap()
+                                frameCount++
+                                totalDecodeMs += System.currentTimeMillis() - t0
+                                if (frameCount % 150 == 0L) {
+                                    val elapsed = System.currentTimeMillis() - startTime
+                                    logger.log("PERF", "decode=${totalDecodeMs / frameCount}ms fps=${frameCount * 1000 / elapsed} size=${data.size / 1024}KB")
+                                }
                             } catch (_: Exception) {}
                         }
                     }
