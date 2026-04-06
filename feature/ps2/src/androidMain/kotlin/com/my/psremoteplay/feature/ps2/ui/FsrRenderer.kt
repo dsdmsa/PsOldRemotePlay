@@ -32,6 +32,8 @@ class FsrRenderer(
     private var inputFboId = 0
     private var inputTexId = 0
     private var intermediateFboId = 0
+    private var fboW = 0
+    private var fboH = 0
     private var intermediateTexId = 0
 
     private var blitProgram = 0
@@ -108,7 +110,10 @@ class FsrRenderer(
             vpX = (width - vpW) / 2; vpY = 0
         }
         log("Output: ${outputWidth}x${outputHeight}, viewport: ${vpW}x${vpH}+${vpX}+${vpY}")
-        recreateFbo(vpW, vpH)
+        // FBO size: use fixed 3x for Fixed3x strategy, otherwise viewport size
+        val fboW = if (pendingUpscaleMethod == UpscaleMethod.FIXED_3X) inputWidth * 3 else vpW
+        val fboH = if (pendingUpscaleMethod == UpscaleMethod.FIXED_3X) inputHeight * 3 else vpH
+        recreateFbo(fboW, fboH)
     }
 
     override fun onDrawFrame(gl: GL10?) {
@@ -139,23 +144,23 @@ class FsrRenderer(
         blitOesToFbo(inputFboId, inputWidth, inputHeight)
 
         if (hasUpscale && hasSharpen) {
-            // Upscale → intermediate FBO, Sharpen → screen
-            renderPass(upscaleProgram, inputTexId, intermediateFboId, vpW, vpH) {
-                upStrategy!!.setUpscaleUniforms(upscaleProgram, inputWidth, inputHeight, vpW, vpH)
+            // Upscale → intermediate FBO (at fboW x fboH), Sharpen → screen
+            renderPass(upscaleProgram, inputTexId, intermediateFboId, fboW, fboH) {
+                upStrategy!!.setUpscaleUniforms(upscaleProgram, inputWidth, inputHeight, fboW, fboH)
             }
-            renderPass(sharpenProgram, intermediateTexId, 0, vpW, vpH) {
-                shStrategy!!.setSharpenUniforms(sharpenProgram, vpW, vpH, sharpVal)
+            renderPass(sharpenProgram, intermediateTexId, 0, fboW, fboH) {
+                shStrategy!!.setSharpenUniforms(sharpenProgram, fboW, fboH, sharpVal)
             }
         } else if (hasUpscale) {
-            // Upscale → screen
-            renderPass(upscaleProgram, inputTexId, 0, vpW, vpH) {
-                upStrategy!!.setUpscaleUniforms(upscaleProgram, inputWidth, inputHeight, vpW, vpH)
+            // Upscale → screen (viewport handles letterbox)
+            renderPass(upscaleProgram, inputTexId, 0, fboW, fboH) {
+                upStrategy!!.setUpscaleUniforms(upscaleProgram, inputWidth, inputHeight, fboW, fboH)
             }
         } else {
-            // Sharpen only: blit input to intermediate at viewport res, Sharpen → screen
-            blitInputToFbo(intermediateFboId, vpW, vpH)
-            renderPass(sharpenProgram, intermediateTexId, 0, vpW, vpH) {
-                shStrategy!!.setSharpenUniforms(sharpenProgram, vpW, vpH, sharpVal)
+            // Sharpen only: blit input to intermediate, Sharpen → screen
+            blitInputToFbo(intermediateFboId, fboW, fboH)
+            renderPass(sharpenProgram, intermediateTexId, 0, fboW, fboH) {
+                shStrategy!!.setSharpenUniforms(sharpenProgram, fboW, fboH, sharpVal)
             }
         }
     }
@@ -258,6 +263,7 @@ class FsrRenderer(
         UpscaleMethod.MATRIX_GUIDED -> MatrixGuidedStrategy()
         UpscaleMethod.DECOMPOSE_RECOMPOSE -> DecomposeRecomposeStrategy()
         UpscaleMethod.OPTIMAL -> OptimalUpscaleStrategy()
+        UpscaleMethod.FIXED_3X -> Fixed3xBicubicStrategy()
         else -> null
     }
 
@@ -271,6 +277,7 @@ class FsrRenderer(
     }
 
     private fun recreateFbo(w: Int, h: Int) {
+        fboW = w; fboH = h
         if (intermediateFboId != 0) {
             GLES30.glDeleteFramebuffers(1, intArrayOf(intermediateFboId), 0)
             GLES30.glDeleteTextures(1, intArrayOf(intermediateTexId), 0)

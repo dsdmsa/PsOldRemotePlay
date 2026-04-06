@@ -784,4 +784,64 @@ val ALL_UPSCALERS: Map<String, (BufferedImage, Int, Int) -> BufferedImage> = map
     "Deblock" to ::upscaleDeblock,
     "CustomBilateral" to ::upscaleCustomBilateral,
     "Optimal" to ::upscaleOptimal,
+    "Fixed3x" to ::upscaleFixed3x,
 )
+
+/**
+ * Fixed 3x integer bicubic with pre-computed Catmull-Rom weights.
+ * Always upscales to exactly 3x the input size, then crops/scales to target.
+ */
+fun upscaleFixed3x(input: BufferedImage, outW: Int, outH: Int): BufferedImage {
+    val w3 = input.width * 3
+    val h3 = input.height * 3
+    // Pre-computed weights for phases 0, 1, 2
+    val weights = arrayOf(
+        floatArrayOf(0f, 1f, 0f, 0f),           // phase 0: exact copy
+        floatArrayOf(-0.074074f, 0.888889f, 0.222222f, -0.037037f), // phase 1
+        floatArrayOf(-0.037037f, 0.222222f, 0.888889f, -0.074074f)  // phase 2
+    )
+
+    val result = createImage(w3, h3)
+    val inW = input.width; val inH = input.height
+
+    for (oy in 0 until h3) {
+        val phaseY = oy % 3
+        val iy = oy / 3
+        val wy = weights[phaseY]
+
+        for (ox in 0 until w3) {
+            val phaseX = ox % 3
+            val ix = ox / 3
+            val wx = weights[phaseX]
+
+            // Fast path: phase (0,0) = exact copy
+            if (phaseX == 0 && phaseY == 0) {
+                val p = getPixelF(input, ix, iy)
+                setPixel(result, ox, oy, p)
+                continue
+            }
+
+            val rgb = FloatArray(3)
+            for (dy in -1..2) {
+                val sy = clampCoord(iy + dy, inH)
+                for (dx in -1..2) {
+                    val sx = clampCoord(ix + dx, inW)
+                    val w = wx[dx + 1] * wy[dy + 1]
+                    if (w != 0f) {
+                        val p = getPixelF(input, sx, sy)
+                        rgb[0] += p[0] * w; rgb[1] += p[1] * w; rgb[2] += p[2] * w
+                    }
+                }
+            }
+            setPixel(result, ox, oy, floatArrayOf(
+                rgb[0].coerceIn(0f, 1f), rgb[1].coerceIn(0f, 1f), rgb[2].coerceIn(0f, 1f)
+            ))
+        }
+    }
+
+    // If target size differs from 3x, scale to match
+    if (outW != w3 || outH != h3) {
+        return downscale(result, outW, outH)
+    }
+    return result
+}
