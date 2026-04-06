@@ -790,7 +790,91 @@ val ALL_UPSCALERS: Map<String, (BufferedImage, Int, Int) -> BufferedImage> = map
     "LumaGuided" to ::upscaleLumaGuided,
     "DualKernel" to ::upscaleDualKernel,
     "SSIMOptimized" to ::upscaleSSIMOptimized,
+    "TinyNN" to ::upscaleTinyNN,
 )
+
+// Trained weights: 11 -> 16 (ReLU) -> 1
+private val NN_W1 = arrayOf(
+    floatArrayOf(-0.16855514f, -0.92925972f, -0.98442978f, 0.34329975f, 0.41149089f, 0.22072943f, -0.04198847f, 0.37030515f, -0.06592251f, 0.04220565f, -0.51154804f),
+    floatArrayOf(-0.07172213f, 0.18855977f, -0.23843971f, -0.23946273f, -0.43159166f, -0.47970226f, 0.37244648f, 0.36405545f, 0.56479651f, 0.00686237f, -0.55412102f),
+    floatArrayOf(-0.78766543f, 0.27380177f, 0.06921509f, -1.17025030f, 0.21329223f, 0.10231556f, -0.51428944f, 0.62975210f, -0.17388032f, -1.24921358f, -0.00312707f),
+    floatArrayOf(0.63439149f, 0.11995757f, -0.08222373f, 0.47934717f, -0.45203638f, -1.10146153f, 0.36486289f, -0.31616867f, -0.20023936f, -0.01690165f, -0.04872619f),
+    floatArrayOf(-0.01767764f, -0.00788193f, -0.35041004f, -0.09448076f, 0.96657574f, 0.03870355f, -1.34436381f, -0.04397606f, -0.16506277f, 0.08820263f, -0.69907105f),
+    floatArrayOf(-0.30537009f, -0.79603571f, -0.81097186f, 0.22148766f, 0.87891078f, 0.31425083f, -0.01122448f, 0.27848166f, -0.26841092f, -0.01401283f, 0.71582770f),
+    floatArrayOf(-0.83545327f, 0.50713247f, -0.16818498f, -0.38301194f, 0.20186435f, 0.47672352f, -0.23967513f, 0.44186223f, -0.37370232f, 0.20269307f, 0.03770854f),
+    floatArrayOf(0.59170586f, -0.03963555f, -0.16520661f, -0.53812784f, -0.86841118f, 0.12053194f, 0.35098445f, -0.05003193f, 0.51457310f, 0.00418267f, 0.28231433f),
+    floatArrayOf(0.15099388f, -0.21561404f, 0.27309108f, 0.04560194f, 0.14129822f, 0.68960351f, 0.67553627f, -0.19050325f, -0.41252032f, 0.75457972f, -0.44232202f),
+    floatArrayOf(0.02645458f, 0.07660850f, 0.02288682f, 0.92380655f, -0.50648451f, 0.48970509f, -0.46826959f, -1.28756344f, -0.40403846f, -0.00188941f, 0.35511214f),
+    floatArrayOf(-0.27587792f, 0.43114656f, 0.44837236f, 0.66333401f, 0.67023766f, -0.62157011f, -0.26402062f, -0.54503191f, -1.01385558f, -0.06441662f, -0.73462152f),
+    floatArrayOf(0.14532357f, -0.68342513f, -0.21842854f, 0.04673654f, 0.06423801f, 0.48259154f, 0.34043232f, -0.41981754f, 0.13767043f, 0.00414749f, 0.80593520f),
+    floatArrayOf(0.89484823f, -0.62952465f, -0.29825518f, -1.46706676f, -0.01741776f, -0.13710219f, -0.03300381f, 0.17092586f, 0.50379497f, 0.00292463f, 0.52349991f),
+    floatArrayOf(-0.08584571f, 0.34847462f, 0.75314569f, -0.18189706f, -1.06106544f, 0.02816024f, 0.30322102f, -0.26242957f, 0.18261577f, -0.01308800f, 0.13431822f),
+    floatArrayOf(0.42106748f, 0.31728929f, -0.73259002f, 0.47889698f, 0.29152438f, -0.73200393f, -0.28528440f, 0.52131164f, -0.58537388f, -0.91888881f, 0.04546573f),
+    floatArrayOf(-0.69341570f, -0.00391920f, 0.07384969f, 0.95475972f, 0.55622774f, 0.27579132f, -0.29096568f, -0.17103378f, -0.45623872f, 0.13464345f, 0.22846797f),
+)
+private val NN_B1 = floatArrayOf(-0.03807065f, 0.06361828f, 0.20749816f, 0.01309223f, 0.03799388f, -0.61370653f, -0.20911601f, -0.10336015f, 0.16259143f, -0.29892609f, 0.06629603f, -0.21222802f, -0.43988922f, -0.12412796f, 0.05428797f, -0.00457107f)
+private val NN_W2 = floatArrayOf(-0.13392687f, -0.11094674f, -0.45129395f, -0.07866702f, 0.39380315f, 0.22080863f, 0.19551767f, 0.08251771f, -0.01240126f, -0.16858803f, 0.13422555f, -0.05422284f, -0.25943333f, -0.10629159f, 0.15783808f, 0.06817199f)
+private const val NN_B2 = -0.00125137f
+
+fun upscaleTinyNN(input: BufferedImage, outW: Int, outH: Int): BufferedImage {
+    val inW = input.width; val inH = input.height
+    val result = createImage(outW, outH)
+    val sx = inW.toFloat() / outW; val sy = inH.toFloat() / outH
+
+    for (oy in 0 until outH) {
+        val srcY = (oy + 0.5f) * sy - 0.5f
+        val iy = srcY.toInt().coerceIn(0, inH - 1)
+        val fy = srcY - iy
+
+        for (ox in 0 until outW) {
+            val srcX = (ox + 0.5f) * sx - 0.5f
+            val ix = srcX.toInt().coerceIn(0, inW - 1)
+            val fx = srcX - ix
+
+            // 3x3 luma neighborhood
+            val inp = FloatArray(11)
+            var k = 0
+            for (dy in -1..1) {
+                for (dx in -1..1) {
+                    val p = getPixelF(input, clampCoord(ix + dx, inW), clampCoord(iy + dy, inH))
+                    inp[k++] = luma(p[0], p[1], p[2])
+                }
+            }
+            inp[9] = fx; inp[10] = fy
+
+            // Bilinear baseline
+            val p11 = getPixelF(input, ix, iy)
+            val p21 = getPixelF(input, clampCoord(ix + 1, inW), iy)
+            val p12 = getPixelF(input, ix, clampCoord(iy + 1, inH))
+            val p22 = getPixelF(input, clampCoord(ix + 1, inW), clampCoord(iy + 1, inH))
+            val bilinear = FloatArray(3)
+            for (c in 0..2) bilinear[c] = (1-fx)*(1-fy)*p11[c] + fx*(1-fy)*p21[c] + (1-fx)*fy*p12[c] + fx*fy*p22[c]
+            val bicLuma = luma(bilinear[0], bilinear[1], bilinear[2])
+
+            // Hidden layer
+            val h = FloatArray(16)
+            for (j in 0..15) {
+                var s = NN_B1[j]
+                for (i in 0..10) s += NN_W1[j][i] * inp[i]
+                h[j] = maxOf(0f, s)
+            }
+
+            // Output
+            var residual = NN_B2
+            for (j in 0..15) residual += NN_W2[j] * h[j]
+
+            val correctedLuma = bicLuma + residual
+            val ratio = if (bicLuma > 0.001f) (correctedLuma / bicLuma).coerceIn(0.8f, 1.2f) else 1f
+            val rgb = floatArrayOf(
+                (bilinear[0] * ratio).coerceIn(0f, 1f),
+                (bilinear[1] * ratio).coerceIn(0f, 1f),
+                (bilinear[2] * ratio).coerceIn(0f, 1f)
+            )
+            setPixel(result, ox, oy, rgb)
+        }
+    }
+    return result
+}
 
 /**
  * Fixed 3x integer bicubic with pre-computed Catmull-Rom weights.

@@ -266,6 +266,7 @@ class FsrRenderer(
         UpscaleMethod.FIXED_3X -> Fixed3xBicubicStrategy()
         UpscaleMethod.DUAL_KERNEL -> DualKernelStrategy()
         UpscaleMethod.LUMA_GUIDED -> LumaGuidedStrategy()
+        UpscaleMethod.TINY_NN -> TinyNNUpscaleStrategy()
         else -> null
     }
 
