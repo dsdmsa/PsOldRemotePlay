@@ -10,7 +10,13 @@ enum class UpscaleMethod(val displayName: String, val description: String) {
     FEATURE_GUIDED("Feature Guided", "Structure tensor analysis + directional bicubic. Best edge quality."),
     RAISR("RAISR-style", "Gradient-classified filter bank. Different filters per edge type."),
     LUT_UPSCALE("LUT Upscale", "Pre-baked interpolation weights. Edge-aware via lookup."),
-    DEBLOCK("Deblock+Bicubic", "H.264 artifact removal + bicubic. Best for compressed video.");
+    DEBLOCK("Deblock+Bicubic", "H.264 artifact removal + bicubic. Best for compressed video."),
+    ADAPTIVE_MATRIX("Adaptive Matrix", "Per-pixel matrix-multiply with 8-dir gradient classification. 16 taps."),
+    NEIGHBORHOOD_TRANSFORM("Nbhd Transform", "Minimal 3x3 matrix upscaler. 9 taps, 27 MADs. Fastest learned filter."),
+    HYBRID_DECOMPOSE("Hybrid Decompose", "3-matrix decomposition: smooth + detail * f(edge). 25 taps, best quality."),
+    FILTER_FUSION("FilterFusion", "3-filter parallel decomposition with guidance-driven anisotropic bicubic."),
+    MATRIX_GUIDED("MatrixGuided", "Feature vector x weight matrix -> 4-direction interpolation blend."),
+    DECOMPOSE_RECOMPOSE("DecomposeRecompose", "Base/detail/edge layer separation, per-layer upscale, recompose.");
 }
 
 /** Sharpener options (applied after upscaling at output resolution) */

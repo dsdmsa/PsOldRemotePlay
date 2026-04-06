@@ -251,6 +251,12 @@ class FsrRenderer(
         UpscaleMethod.RAISR -> RaisrStrategy()
         UpscaleMethod.LUT_UPSCALE -> LutUpscaleStrategy()
         UpscaleMethod.DEBLOCK -> DeblockUpscaleStrategy()
+        UpscaleMethod.ADAPTIVE_MATRIX -> AdaptiveMatrixUpscaleStrategy()
+        UpscaleMethod.NEIGHBORHOOD_TRANSFORM -> NeighborhoodTransformStrategy()
+        UpscaleMethod.HYBRID_DECOMPOSE -> HybridDecomposeStrategy()
+        UpscaleMethod.FILTER_FUSION -> FilterFusionStrategy()
+        UpscaleMethod.MATRIX_GUIDED -> MatrixGuidedStrategy()
+        UpscaleMethod.DECOMPOSE_RECOMPOSE -> DecomposeRecomposeStrategy()
         else -> null
     }
 

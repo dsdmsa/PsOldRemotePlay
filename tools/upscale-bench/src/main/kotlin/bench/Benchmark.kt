@@ -21,7 +21,7 @@ private val IMAGE_EXTENSIONS = setOf("png", "jpg", "jpeg")
 
 fun main() {
     val projectRoot = findProjectRoot()
-    val benchDir = File(projectRoot, "tools/upscale-bench/imgs")
+    val benchDir = File(projectRoot, "imgs")
     val referenceDir = File(benchDir, "reference")
     val downscaledDir = File(benchDir, "downscaled")
     val resultsDir = File(benchDir, "results")
