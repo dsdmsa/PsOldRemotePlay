@@ -23,6 +23,7 @@ import com.my.psremoteplay.feature.ps2.protocol.StreamStats
 import com.my.psremoteplay.feature.ps2.strategy.client.AndroidJavaCvClient
 import com.my.psremoteplay.feature.ps2.strategy.client.AndroidMediaCodecClient
 import com.my.psremoteplay.feature.ps2.strategy.client.AndroidUdpJpegClient
+import com.my.psremoteplay.feature.ps2.strategy.client.AudioStreamClient
 import java.io.DataInputStream
 import java.net.Socket
 
@@ -60,6 +61,12 @@ class AndroidPs2ClientDependencies(
         StreamingPreset.PCSX2_PIPE -> AndroidUdpJpegClient(_logger) // PCSX2 pipe sends JPEG via UDP
         StreamingPreset.H264_HW -> AndroidMediaCodecClient(_logger)
     }
+
+    // Audio client — starts alongside video
+    private val audioClient = AudioStreamClient(_logger)
+
+    override fun startAudio(port: Int) { audioClient.start(port) }
+    override fun stopAudio() { audioClient.stop() }
 
     /** Set the Surface for hardware-accelerated rendering (H264_HW preset only) */
     fun setSurface(surface: android.view.Surface?) {

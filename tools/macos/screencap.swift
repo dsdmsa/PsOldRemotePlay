@@ -20,13 +20,15 @@ import CoreGraphics
 struct CaptureConfig {
     var targetHost = "127.0.0.1"
     var targetPort: UInt16 = 9296
+    var audioPort: UInt16 = 9297
     var width = 640
     var height = 448
     var fps = 30
     var bitrate = 8_000_000
     var keyframeInterval = 30
     var displayIndex = 0
-    var appFilter = ""  // capture only this app's windows (substring match on name)
+    var appFilter = ""
+    var captureAudio = true
 }
 
 func parseArgs() -> CaptureConfig {
@@ -43,7 +45,9 @@ func parseArgs() -> CaptureConfig {
         case "--bitrate": i += 1; c.bitrate = Int(args[i]) ?? 8_000_000
         case "--keyframe": i += 1; c.keyframeInterval = Int(args[i]) ?? 30
         case "--display": i += 1; c.displayIndex = Int(args[i]) ?? 0
-        case "--app":    i += 1; c.appFilter = args[i]
+        case "--app":       i += 1; c.appFilter = args[i]
+        case "--audio-port": i += 1; c.audioPort = UInt16(args[i]) ?? 9297
+        case "--no-audio":  c.captureAudio = false
         default: break
         }
         i += 1
@@ -273,10 +277,12 @@ class ScreenCapture: NSObject, SCStreamOutput, SCStreamDelegate {
     private var stream: SCStream?
     private let encoder: H264Encoder
     private let config: CaptureConfig
+    private var audioSender: UDPSender?
 
-    init(config: CaptureConfig, encoder: H264Encoder) {
+    init(config: CaptureConfig, encoder: H264Encoder, audioSender: UDPSender?) {
         self.config = config
         self.encoder = encoder
+        self.audioSender = audioSender
     }
 
     func start() async throws {
@@ -312,16 +318,58 @@ class ScreenCapture: NSObject, SCStreamOutput, SCStreamDelegate {
         sc.showsCursor = false
         sc.queueDepth = 3
 
+        // Enable audio capture (macOS 13+)
+        if config.captureAudio {
+            sc.capturesAudio = true
+            sc.sampleRate = 48000
+            sc.channelCount = 2
+        }
+
         stream = SCStream(filter: filter, configuration: sc, delegate: self)
         try stream!.addStreamOutput(self, type: .screen,
                                      sampleHandlerQueue: DispatchQueue(label: "cap", qos: .userInteractive))
+        if config.captureAudio {
+            try stream!.addStreamOutput(self, type: .audio,
+                                         sampleHandlerQueue: DispatchQueue(label: "audio", qos: .userInteractive))
+            log("Audio capture enabled (48kHz stereo) → \(config.targetHost):\(config.audioPort)")
+        }
         try await stream!.startCapture()
         log("Capture started → \(config.targetHost):\(config.targetPort)")
     }
 
     func stream(_ stream: SCStream, didOutputSampleBuffer sb: CMSampleBuffer, of type: SCStreamOutputType) {
-        guard type == .screen, let pb = CMSampleBufferGetImageBuffer(sb) else { return }
-        encoder.encode(pixelBuffer: pb, timestamp: CMSampleBufferGetPresentationTimeStamp(sb))
+        switch type {
+        case .screen:
+            guard let pb = CMSampleBufferGetImageBuffer(sb) else { return }
+            encoder.encode(pixelBuffer: pb, timestamp: CMSampleBufferGetPresentationTimeStamp(sb))
+        case .audio:
+            sendAudio(sb)
+        @unknown default:
+            break
+        }
+    }
+
+    private func sendAudio(_ sb: CMSampleBuffer) {
+        guard let sender = audioSender else { return }
+        guard let blockBuffer = CMSampleBufferGetDataBuffer(sb) else { return }
+        var length = 0
+        var dataPointer: UnsafeMutablePointer<Int8>?
+        CMBlockBufferGetDataPointer(blockBuffer, atOffset: 0, lengthAtOffsetOut: nil,
+                                    totalLengthOut: &length, dataPointerOut: &dataPointer)
+        guard let ptr = dataPointer, length > 0 else { return }
+
+        // ScreenCaptureKit delivers 32-bit float PCM. Convert to 16-bit int for Android AudioTrack.
+        let floatCount = length / 4
+        let floatPtr = UnsafeRawPointer(ptr).bindMemory(to: Float32.self, capacity: floatCount)
+        var int16Data = Data(count: floatCount * 2)
+        int16Data.withUnsafeMutableBytes { buf in
+            let int16Ptr = buf.bindMemory(to: Int16.self)
+            for i in 0..<floatCount {
+                let clamped = max(-1.0, min(1.0, floatPtr[i]))
+                int16Ptr[i] = Int16(clamped * 32767.0)
+            }
+        }
+        sender.send(int16Data)
     }
 
     func stream(_ stream: SCStream, didStopWithError error: Error) {
@@ -340,8 +388,9 @@ class ScreenCapture: NSObject, SCStreamOutput, SCStreamDelegate {
 let config = parseArgs()
 log("Starting: \(config.width)x\(config.height)@\(config.fps)fps → \(config.targetHost):\(config.targetPort) bitrate=\(config.bitrate/1000)kbps")
 
-let sender = UDPSender(host: config.targetHost, port: config.targetPort)
-let encoder = H264Encoder(config: config, sender: sender)
+let videoSender = UDPSender(host: config.targetHost, port: config.targetPort)
+let audioSender = config.captureAudio ? UDPSender(host: config.targetHost, port: config.audioPort) : nil
+let encoder = H264Encoder(config: config, sender: videoSender)
 
 signal(SIGINT)  { _ in log("SIGINT");  exit(0) }
 signal(SIGTERM) { _ in log("SIGTERM"); exit(0) }
@@ -351,7 +400,7 @@ guard #available(macOS 12.3, *) else {
     exit(1)
 }
 
-let capture = ScreenCapture(config: config, encoder: encoder)
+let capture = ScreenCapture(config: config, encoder: encoder, audioSender: audioSender)
 
 Task {
     do {

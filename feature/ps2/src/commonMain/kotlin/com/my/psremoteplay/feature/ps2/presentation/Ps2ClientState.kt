@@ -14,7 +14,9 @@ data class Ps2ClientState(
     val isStreaming: Boolean = false,
     val showController: Boolean = true,
     val statusText: String = "Ready",
-    val usesSurfaceRendering: Boolean = false
+    val usesSurfaceRendering: Boolean = false,
+    val decodeFps: Int = 0,
+    val pingMs: Int = -1
 )
 
 sealed interface Ps2ClientIntent {

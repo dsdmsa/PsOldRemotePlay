@@ -22,7 +22,8 @@ import com.my.psremoteplay.feature.ps2.presentation.Ps2ClientIntent
 import com.my.psremoteplay.feature.ps2.presentation.Ps2ClientViewModel
 import com.my.psremoteplay.feature.ps2.strategy.StreamingPreset
 import com.my.psremoteplay.feature.ps2.ui.Ps2AndroidHwGameScreen
-import com.my.psremoteplay.feature.ps2.ui.upscale.UpscalePreset
+import com.my.psremoteplay.feature.ps2.ui.upscale.SharpenMethod
+import com.my.psremoteplay.feature.ps2.ui.upscale.UpscaleMethod
 import kotlinx.coroutines.flow.collectLatest
 
 class MainActivity : ComponentActivity() {
@@ -65,9 +66,11 @@ class MainActivity : ComponentActivity() {
 
             val state by vm.state.collectAsState()
 
-            // Upscale settings (local UI state, persists across recompositions)
-            var upscalePreset by remember { mutableStateOf(UpscalePreset.FSR) }
-            var upscaleSharpness by remember { mutableFloatStateOf(0.2f) }
+            // Upscale settings (local UI state)
+            var upscaleMethod by remember { mutableStateOf(UpscaleMethod.CATMULL_ROM) }
+            var sharpenMethod by remember { mutableStateOf(SharpenMethod.CAS) }
+            var sharpness by remember { mutableFloatStateOf(0.5f) }
+            var bitrateMbps by remember { mutableIntStateOf(8) }
 
             Ps2AndroidHwGameScreen(
                 onSurfaceAvailable = { surface -> deps.setSurface(surface) },
@@ -78,10 +81,16 @@ class MainActivity : ComponentActivity() {
                 statusText = state.statusText,
                 frameCount = state.videoFrameCount,
                 isError = state.connectionStatus == com.my.psremoteplay.core.streaming.ConnectionStatus.Error,
-                currentUpscalePreset = upscalePreset,
-                upscaleSharpness = upscaleSharpness,
-                onUpscalePresetChanged = { upscalePreset = it },
-                onUpscaleSharpnessChanged = { upscaleSharpness = it }
+                upscaleMethod = upscaleMethod,
+                sharpenMethod = sharpenMethod,
+                sharpness = sharpness,
+                bitrateMbps = bitrateMbps,
+                onUpscaleMethodChanged = { upscaleMethod = it },
+                onSharpenMethodChanged = { sharpenMethod = it },
+                onSharpnessChanged = { sharpness = it },
+                onBitrateChanged = { bitrateMbps = it },
+                decodeFps = state.decodeFps,
+                pingMs = state.pingMs
             )
         }
     }

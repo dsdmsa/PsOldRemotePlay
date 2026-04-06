@@ -23,15 +23,6 @@ import com.my.psremoteplay.feature.ps2.ui.upscale.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/**
- * Hardware-accelerated game screen.
- *
- * Video: SurfaceView → MediaCodec decodes directly to Surface (zero-copy, no Compose).
- * Controls: Compose overlay on top of the SurfaceView hardware layer.
- *
- * This eliminates the ImageBitmap → Compose recomposition → Skia draw → GPU upload
- * bottleneck, yielding ~15-20 FPS improvement over the software path.
- */
 @Composable
 fun Ps2AndroidHwGameScreen(
     onSurfaceAvailable: (Surface) -> Unit,
@@ -42,14 +33,21 @@ fun Ps2AndroidHwGameScreen(
     statusText: String = "",
     frameCount: Int = 0,
     isError: Boolean = false,
-    currentUpscalePreset: UpscalePreset = UpscalePreset.NONE,
-    upscaleSharpness: Float = 0.5f,
-    onUpscalePresetChanged: (UpscalePreset) -> Unit = {},
-    onUpscaleSharpnessChanged: (Float) -> Unit = {},
+    upscaleMethod: UpscaleMethod = UpscaleMethod.CATMULL_ROM,
+    sharpenMethod: SharpenMethod = SharpenMethod.CAS,
+    sharpness: Float = 0.2f,
+    bitrateMbps: Int = 8,
+    onUpscaleMethodChanged: (UpscaleMethod) -> Unit = {},
+    onSharpenMethodChanged: (SharpenMethod) -> Unit = {},
+    onSharpnessChanged: (Float) -> Unit = {},
+    onBitrateChanged: (Int) -> Unit = {},
+    decodeFps: Int = 0,
+    pingMs: Int = -1,
     modifier: Modifier = Modifier
 ) {
     var controllerState by remember { mutableStateOf(ControllerState()) }
     val scope = rememberCoroutineScope()
+    var renderer by remember { mutableStateOf<FsrRenderer?>(null) }
 
     fun send(newState: ControllerState) {
         controllerState = newState
@@ -64,48 +62,36 @@ fun Ps2AndroidHwGameScreen(
         }
     }
 
-    // Map preset to strategy
-    val upscaleStrategy = remember(currentUpscalePreset) {
-        when (currentUpscalePreset) {
-            UpscalePreset.NONE -> null
-            UpscalePreset.FSR -> FsrStrategy()
-            UpscalePreset.SGSR -> SgsrStrategy()
-            UpscalePreset.CATMULL_ROM_CAS -> CatmullRomCasStrategy()
-        }
-    }
-
     Box(modifier = modifier.fillMaxSize().background(Color.Black)) {
-        // Video layer with upscaling
+        // Video layer
         GameStreamSurface(
             modifier = Modifier.fillMaxSize(),
-            upscaleStrategy = upscaleStrategy,
-            sharpness = upscaleSharpness,
+            upscaleMethod = upscaleMethod,
+            sharpenMethod = sharpenMethod,
+            sharpness = sharpness,
             onSurfaceAvailable = onSurfaceAvailable,
-            onSurfaceDestroyed = onSurfaceDestroyed
+            onSurfaceDestroyed = onSurfaceDestroyed,
+            onRendererReady = { renderer = it }
         )
 
-        // Status overlay (before stream starts or on error)
+        // Status overlay (error or waiting)
         if (frameCount == 0 || isError) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         statusText.ifEmpty { "Waiting for H.264 stream..." },
                         color = if (isError) Color.Red else Color.Cyan,
-                        fontSize = 16.sp,
-                        fontFamily = FontFamily.Monospace
+                        fontSize = 16.sp, fontFamily = FontFamily.Monospace
                     )
                     Spacer(Modifier.height(16.dp))
-                    Button(
-                        onClick = onReconnect,
+                    Button(onClick = onReconnect,
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan.copy(alpha = 0.3f))
-                    ) {
-                        Text("Retry Connection", color = Color.White, fontFamily = FontFamily.Monospace)
-                    }
+                    ) { Text("Retry Connection", color = Color.White, fontFamily = FontFamily.Monospace) }
                 }
             }
         }
 
-        // Touch zones: only active during streaming (hidden on error so retry button is tappable)
+        // Touch zones (only during streaming)
         if (frameCount > 0 && !isError)
         Row(Modifier.fillMaxSize()) {
             HwStickTouchZone(
@@ -113,23 +99,18 @@ fun Ps2AndroidHwGameScreen(
                 onTap = { dx, dy ->
                     val btn = if (kotlin.math.abs(dx) > kotlin.math.abs(dy)) {
                         if (dx > 0) ControllerButtons.RIGHT else ControllerButtons.LEFT
-                    } else {
-                        if (dy > 0) ControllerButtons.DOWN else ControllerButtons.UP
-                    }
+                    } else { if (dy > 0) ControllerButtons.DOWN else ControllerButtons.UP }
                     tapButton(btn)
                 },
                 onStickMove = { x, y -> send(controllerState.copy(leftStickX = x, leftStickY = y)) },
                 onStickRelease = { send(controllerState.copy(leftStickX = 0f, leftStickY = 0f)) }
             )
-
             HwStickTouchZone(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 onTap = { dx, dy ->
                     val btn = if (kotlin.math.abs(dx) > kotlin.math.abs(dy)) {
                         if (dx > 0) ControllerButtons.CIRCLE else ControllerButtons.SQUARE
-                    } else {
-                        if (dy > 0) ControllerButtons.CROSS else ControllerButtons.TRIANGLE
-                    }
+                    } else { if (dy > 0) ControllerButtons.CROSS else ControllerButtons.TRIANGLE }
                     tapButton(btn)
                 },
                 onStickMove = { x, y -> send(controllerState.copy(rightStickX = x, rightStickY = y)) },
@@ -137,13 +118,10 @@ fun Ps2AndroidHwGameScreen(
             )
         }
 
-        // Bottom bar: shoulder buttons + Select/Start (only during streaming)
+        // Bottom bar (only during streaming)
         if (frameCount > 0 && !isError)
         Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
+            modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -160,88 +138,84 @@ fun Ps2AndroidHwGameScreen(
             }
         }
 
-        // Top-right buttons: reconnect + close
-        Row(
-            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Button(
-                onClick = onReconnect,
-                modifier = Modifier.size(36.dp),
-                shape = CircleShape,
+        // Top-right: reconnect + close
+        Row(Modifier.align(Alignment.TopEnd).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Button(onClick = onReconnect, modifier = Modifier.size(36.dp), shape = CircleShape,
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan.copy(alpha = 0.4f)),
                 contentPadding = PaddingValues(0.dp)
             ) { Text("↻", color = Color.White, fontSize = 16.sp) }
-            Button(
-                onClick = onClose,
-                modifier = Modifier.size(36.dp),
-                shape = CircleShape,
+            Button(onClick = onClose, modifier = Modifier.size(36.dp), shape = CircleShape,
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.5f)),
                 contentPadding = PaddingValues(0.dp)
             ) { Text("X", color = Color.White, fontSize = 14.sp) }
         }
 
-        // Performance overlay
+        // Performance overlay: FPS + ping
         if (frameCount > 0) {
-            Text(
-                "HW $frameCount",
-                modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
-                color = Color.Green.copy(alpha = 0.7f),
-                fontSize = 10.sp,
-                fontFamily = FontFamily.Monospace
-            )
+            val renderFps = renderer?.currentFps ?: 0
+            val fpsColor = when {
+                decodeFps >= 25 -> Color.Green
+                decodeFps >= 15 -> Color.Yellow
+                else -> Color.Red
+            }
+            Column(Modifier.align(Alignment.TopStart).padding(8.dp)) {
+                Text(
+                    "${decodeFps}fps decode | ${renderFps}fps render",
+                    color = fpsColor.copy(alpha = 0.8f),
+                    fontSize = 10.sp, fontFamily = FontFamily.Monospace
+                )
+                if (pingMs >= 0) {
+                    val pingColor = when {
+                        pingMs < 20 -> Color.Green
+                        pingMs < 50 -> Color.Yellow
+                        else -> Color.Red
+                    }
+                    Text(
+                        "${pingMs}ms ping",
+                        color = pingColor.copy(alpha = 0.8f),
+                        fontSize = 10.sp, fontFamily = FontFamily.Monospace
+                    )
+                }
+            }
         }
 
-        // Upscale settings drawer (renders on top of all other content)
+        // Settings drawer
         UpscaleSettingsDrawer(
-            currentPreset = currentUpscalePreset,
-            sharpness = upscaleSharpness,
-            onPresetChanged = onUpscalePresetChanged,
-            onSharpnessChanged = onUpscaleSharpnessChanged
+            upscaleMethod = upscaleMethod,
+            sharpenMethod = sharpenMethod,
+            sharpness = sharpness,
+            bitrateMbps = bitrateMbps,
+            onUpscaleMethodChanged = onUpscaleMethodChanged,
+            onSharpenMethodChanged = onSharpenMethodChanged,
+            onSharpnessChanged = onSharpnessChanged,
+            onBitrateChanged = onBitrateChanged
         )
     }
 }
 
 @Composable
-private fun HwStickTouchZone(
-    modifier: Modifier,
-    onTap: (dx: Float, dy: Float) -> Unit,
-    onStickMove: (x: Float, y: Float) -> Unit,
-    onStickRelease: () -> Unit
-) {
+private fun HwStickTouchZone(modifier: Modifier, onTap: (Float, Float) -> Unit, onStickMove: (Float, Float) -> Unit, onStickRelease: () -> Unit) {
     var size by remember { mutableStateOf(IntSize.Zero) }
     var stickX by remember { mutableStateOf(0f) }
     var stickY by remember { mutableStateOf(0f) }
-
-    Box(
-        modifier = modifier
-            .onSizeChanged { size = it }
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragEnd = { stickX = 0f; stickY = 0f; onStickRelease() },
-                    onDragCancel = { stickX = 0f; stickY = 0f; onStickRelease() }
-                ) { _, dragAmount ->
-                    stickX = (stickX + dragAmount.x / 100f).coerceIn(-1f, 1f)
-                    stickY = (stickY - dragAmount.y / 100f).coerceIn(-1f, 1f)
-                    onStickMove(stickX, stickY)
-                }
+    Box(modifier.onSizeChanged { size = it }
+        .pointerInput(Unit) {
+            detectDragGestures(
+                onDragEnd = { stickX = 0f; stickY = 0f; onStickRelease() },
+                onDragCancel = { stickX = 0f; stickY = 0f; onStickRelease() }
+            ) { _, d -> stickX = (stickX + d.x/100f).coerceIn(-1f,1f); stickY = (stickY - d.y/100f).coerceIn(-1f,1f); onStickMove(stickX, stickY) }
+        }
+        .pointerInput(Unit) {
+            detectTapGestures { o ->
+                if (size.width > 0 && size.height > 0) onTap(o.x - size.width/2f, o.y - size.height/2f)
             }
-            .pointerInput(Unit) {
-                detectTapGestures { offset ->
-                    if (size.width == 0 || size.height == 0) return@detectTapGestures
-                    val dx = offset.x - size.width / 2f
-                    val dy = offset.y - size.height / 2f
-                    onTap(dx, dy)
-                }
-            }
+        }
     )
 }
 
 @Composable
 private fun HwTouchBtn(label: String, onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier.height(32.dp),
+    Button(onClick, Modifier.height(32.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.15f)),
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp)
     ) { Text(label, color = Color.White.copy(alpha = 0.7f), fontSize = 11.sp, fontFamily = FontFamily.Monospace) }

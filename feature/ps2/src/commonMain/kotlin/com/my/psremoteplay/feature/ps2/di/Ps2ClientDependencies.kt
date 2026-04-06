@@ -21,4 +21,8 @@ interface Ps2ClientDependencies {
     fun disconnectControl()
     fun isConnected(): Boolean
     fun sendControllerState(state: ControllerState)
+
+    /** Audio stream (optional — no-op on platforms without audio) */
+    fun startAudio(port: Int) {}
+    fun stopAudio() {}
 }

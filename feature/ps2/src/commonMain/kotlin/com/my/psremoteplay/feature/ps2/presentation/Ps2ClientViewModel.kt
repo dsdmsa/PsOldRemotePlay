@@ -86,12 +86,22 @@ class Ps2ClientViewModel(private val deps: Ps2ClientDependencies) : ViewModel() 
                 return@launch
             }
 
-            // 3. Count frames (Surface-based clients need polling; ImageBitmap clients use flow)
+            // 3. Start audio (port = video port + 1)
+            deps.startAudio(config.videoPort + 1)
+
+            // 4. Track frames + compute FPS
             if (strategy.usesSurfaceRendering) {
                 launch {
+                    var lastCount = 0L
+                    var lastTime = System.currentTimeMillis()
                     while (true) {
-                        kotlinx.coroutines.delay(500)
-                        _state.update { it.copy(videoFrameCount = strategy.decodedFrameCount.toInt()) }
+                        kotlinx.coroutines.delay(1000)
+                        val count = strategy.decodedFrameCount
+                        val now = System.currentTimeMillis()
+                        val elapsed = now - lastTime
+                        val fps = if (elapsed > 0) ((count - lastCount) * 1000 / elapsed).toInt() else 0
+                        lastCount = count; lastTime = now
+                        _state.update { it.copy(videoFrameCount = count.toInt(), decodeFps = fps) }
                     }
                 }
             } else {
@@ -99,6 +109,17 @@ class Ps2ClientViewModel(private val deps: Ps2ClientDependencies) : ViewModel() 
                     strategy.currentFrame.collect { frame ->
                         if (frame != null) _state.update { it.copy(videoFrameCount = it.videoFrameCount + 1) }
                     }
+                }
+            }
+
+            // 4. Ping measurement (TCP round-trip to server)
+            launch {
+                while (true) {
+                    kotlinx.coroutines.delay(2000)
+                    val start = System.currentTimeMillis()
+                    val connected = deps.isConnected()
+                    val elapsed = (System.currentTimeMillis() - start).toInt()
+                    if (connected) _state.update { it.copy(pingMs = elapsed) }
                 }
             }
 
@@ -132,6 +153,7 @@ class Ps2ClientViewModel(private val deps: Ps2ClientDependencies) : ViewModel() 
         streamingJob?.cancel()
         streamingJob = null
         viewModelScope.launch {
+            deps.stopAudio()
             deps.videoStreamClient.stop()
             deps.disconnectControl()
             updateState {

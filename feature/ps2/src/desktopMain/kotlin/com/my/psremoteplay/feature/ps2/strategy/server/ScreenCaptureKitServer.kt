@@ -33,10 +33,12 @@ class ScreenCaptureKitServer(private val logger: Logger) : VideoStreamServer {
             return
         }
 
+        val audioPort = config.videoPort + 1
         val cmd = listOf(
             binary,
             "--target", config.targetIp,
             "--port", config.videoPort.toString(),
+            "--audio-port", audioPort.toString(),
             "--width", config.width.toString(),
             "--height", config.height.toString(),
             "--fps", config.fps.toString(),
