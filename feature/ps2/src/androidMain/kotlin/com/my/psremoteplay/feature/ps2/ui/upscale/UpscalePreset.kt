@@ -21,7 +21,8 @@ enum class UpscaleMethod(val displayName: String, val description: String) {
     FIXED_3X("Fixed 3x", "Pre-computed 3x integer bicubic. Fastest quality, uniform scaling."),
     DUAL_KERNEL("DualKernel", "Catmull-Rom + Mitchell blend. Best quality — beats bicubic on all metrics."),
     LUMA_GUIDED("LumaGuided", "Bicubic + bilinear blend by contrast. Best SSIM for compressed video."),
-    TINY_NN("Tiny NN", "209-param trained neural network. Content-adaptive luma correction.");
+    TINY_NN("Tiny NN", "209-param trained neural network. Content-adaptive luma correction."),
+    TINY_NN_V2("Tiny NN v2", "641-param NN with PReLU, dilated inputs, gradient features. Best learned upscaler.");
 }
 
 /** Sharpener options (applied after upscaling at output resolution) */
