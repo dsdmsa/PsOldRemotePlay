@@ -21,8 +21,8 @@ import com.my.psremoteplay.feature.ps2.presentation.Ps2ClientEffect
 import com.my.psremoteplay.feature.ps2.presentation.Ps2ClientIntent
 import com.my.psremoteplay.feature.ps2.presentation.Ps2ClientViewModel
 import com.my.psremoteplay.feature.ps2.strategy.StreamingPreset
-import com.my.psremoteplay.feature.ps2.ui.Ps2AndroidGameScreen
 import com.my.psremoteplay.feature.ps2.ui.Ps2AndroidHwGameScreen
+import com.my.psremoteplay.feature.ps2.ui.upscale.UpscalePreset
 import kotlinx.coroutines.flow.collectLatest
 
 class MainActivity : ComponentActivity() {
@@ -65,8 +65,10 @@ class MainActivity : ComponentActivity() {
 
             val state by vm.state.collectAsState()
 
-            // Always use HW screen for H264_HW preset — shows retry button on error,
-            // FSR upscaling during streaming, and controller overlay when connected
+            // Upscale settings (local UI state, persists across recompositions)
+            var upscalePreset by remember { mutableStateOf(UpscalePreset.FSR) }
+            var upscaleSharpness by remember { mutableFloatStateOf(0.2f) }
+
             Ps2AndroidHwGameScreen(
                 onSurfaceAvailable = { surface -> deps.setSurface(surface) },
                 onSurfaceDestroyed = { deps.setSurface(null) },
@@ -75,7 +77,11 @@ class MainActivity : ComponentActivity() {
                 onReconnect = { vm.onIntent(Ps2ClientIntent.Reconnect) },
                 statusText = state.statusText,
                 frameCount = state.videoFrameCount,
-                isError = state.connectionStatus == com.my.psremoteplay.core.streaming.ConnectionStatus.Error
+                isError = state.connectionStatus == com.my.psremoteplay.core.streaming.ConnectionStatus.Error,
+                currentUpscalePreset = upscalePreset,
+                upscaleSharpness = upscaleSharpness,
+                onUpscalePresetChanged = { upscalePreset = it },
+                onUpscaleSharpnessChanged = { upscaleSharpness = it }
             )
         }
     }

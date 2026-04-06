@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.my.psremoteplay.core.streaming.input.ControllerButtons
 import com.my.psremoteplay.core.streaming.input.ControllerState
+import com.my.psremoteplay.feature.ps2.ui.upscale.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -41,6 +42,10 @@ fun Ps2AndroidHwGameScreen(
     statusText: String = "",
     frameCount: Int = 0,
     isError: Boolean = false,
+    currentUpscalePreset: UpscalePreset = UpscalePreset.NONE,
+    upscaleSharpness: Float = 0.5f,
+    onUpscalePresetChanged: (UpscalePreset) -> Unit = {},
+    onUpscaleSharpnessChanged: (Float) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var controllerState by remember { mutableStateOf(ControllerState()) }
@@ -59,10 +64,22 @@ fun Ps2AndroidHwGameScreen(
         }
     }
 
+    // Map preset to strategy
+    val upscaleStrategy = remember(currentUpscalePreset) {
+        when (currentUpscalePreset) {
+            UpscalePreset.NONE -> null
+            UpscalePreset.FSR -> FsrStrategy()
+            UpscalePreset.SGSR -> SgsrStrategy()
+            UpscalePreset.CATMULL_ROM_CAS -> CatmullRomCasStrategy()
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize().background(Color.Black)) {
-        // Video layer: SurfaceView rendered by MediaCodec (below Compose)
+        // Video layer with upscaling
         GameStreamSurface(
             modifier = Modifier.fillMaxSize(),
+            upscaleStrategy = upscaleStrategy,
+            sharpness = upscaleSharpness,
             onSurfaceAvailable = onSurfaceAvailable,
             onSurfaceDestroyed = onSurfaceDestroyed
         )
@@ -174,6 +191,14 @@ fun Ps2AndroidHwGameScreen(
                 fontFamily = FontFamily.Monospace
             )
         }
+
+        // Upscale settings drawer (renders on top of all other content)
+        UpscaleSettingsDrawer(
+            currentPreset = currentUpscalePreset,
+            sharpness = upscaleSharpness,
+            onPresetChanged = onUpscalePresetChanged,
+            onSharpnessChanged = onUpscaleSharpnessChanged
+        )
     }
 }
 
