@@ -34,7 +34,8 @@ uniform vec2 uInputSize;
 in vec2 vTexCoord;
 out vec4 fragColor;
 
-// v2 trained weights: 17 -> 32 (PReLU) -> 1, 641 params
+// v2 quick-trained weights (best benchmark score 0.778): 17 -> 32 (PReLU) -> 1
+const int N_INPUTS = 17;
 const int HIDDEN = 32;
 
 const float W1[32][17] = float[32][17](
