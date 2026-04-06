@@ -16,7 +16,8 @@ enum class UpscaleMethod(val displayName: String, val description: String) {
     HYBRID_DECOMPOSE("Hybrid Decompose", "3-matrix decomposition: smooth + detail * f(edge). 25 taps, best quality."),
     FILTER_FUSION("FilterFusion", "3-filter parallel decomposition with guidance-driven anisotropic bicubic."),
     MATRIX_GUIDED("MatrixGuided", "Feature vector x weight matrix -> 4-direction interpolation blend."),
-    DECOMPOSE_RECOMPOSE("DecomposeRecompose", "Base/detail/edge layer separation, per-layer upscale, recompose.");
+    DECOMPOSE_RECOMPOSE("DecomposeRecompose", "Base/detail/edge layer separation, per-layer upscale, recompose."),
+    OPTIMAL("Optimal", "Adaptive bicubic with artifact suppression. Best for compressed video.");
 }
 
 /** Sharpener options (applied after upscaling at output resolution) */

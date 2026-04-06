@@ -257,6 +257,7 @@ class FsrRenderer(
         UpscaleMethod.FILTER_FUSION -> FilterFusionStrategy()
         UpscaleMethod.MATRIX_GUIDED -> MatrixGuidedStrategy()
         UpscaleMethod.DECOMPOSE_RECOMPOSE -> DecomposeRecomposeStrategy()
+        UpscaleMethod.OPTIMAL -> OptimalUpscaleStrategy()
         else -> null
     }
 
