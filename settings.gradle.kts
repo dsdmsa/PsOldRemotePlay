@@ -46,3 +46,6 @@ include(":feature:ps2:protocol")
 include(":app:ps3")
 include(":app:ps2server")
 include(":app:ps2client")
+
+// Tools
+include(":tools:upscale-bench")
