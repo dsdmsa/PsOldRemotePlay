@@ -785,6 +785,11 @@ val ALL_UPSCALERS: Map<String, (BufferedImage, Int, Int) -> BufferedImage> = map
     "CustomBilateral" to ::upscaleCustomBilateral,
     "Optimal" to ::upscaleOptimal,
     "Fixed3x" to ::upscaleFixed3x,
+    "BicubicBilateral" to ::upscaleBicubicBilateral,
+    "BicubicClamp" to ::upscaleBicubicClamp,
+    "LumaGuided" to ::upscaleLumaGuided,
+    "DualKernel" to ::upscaleDualKernel,
+    "SSIMOptimized" to ::upscaleSSIMOptimized,
 )
 
 /**
@@ -844,4 +849,351 @@ fun upscaleFixed3x(input: BufferedImage, outW: Int, outH: Int): BufferedImage {
         return downscale(result, outW, outH)
     }
     return result
+}
+
+// ---------------------------------------------------------------------------
+// Mitchell-Netravali kernel weight (B=1/3, C=1/3)
+// ---------------------------------------------------------------------------
+
+/** Mitchell-Netravali (B=1/3, C=1/3) basis weight for distance |t|. */
+private fun mitchellWeight(t: Float): Float {
+    val at = abs(t)
+    return when {
+        at < 1f -> (1f / 6f) * (7f * at * at * at - 12f * at * at + 16f / 3f)
+        at < 2f -> (1f / 6f) * ((-7f / 3f) * at * at * at + 12f * at * at - 20f * at + 32f / 3f)
+        else -> 0f
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Helper: inline bicubic (Catmull-Rom) at fractional position
+// ---------------------------------------------------------------------------
+
+/** Compute Catmull-Rom bicubic at sub-pixel (ix0+fx, iy0+fy) in input. */
+private fun sampleBicubicCR(input: BufferedImage, ix0: Int, iy0: Int, fx: Float, fy: Float): FloatArray {
+    val result = FloatArray(3)
+    var wTotal = 0f
+    for (dy in -1..2) {
+        val wy = catmullRomWeight(fy - dy)
+        for (dx in -1..2) {
+            val wx = catmullRomWeight(fx - dx)
+            val w = wx * wy
+            wTotal += w
+            val p = getPixelF(input, ix0 + dx, iy0 + dy)
+            result[0] += p[0] * w; result[1] += p[1] * w; result[2] += p[2] * w
+        }
+    }
+    if (wTotal > 0f) { result[0] /= wTotal; result[1] /= wTotal; result[2] /= wTotal }
+    return result
+}
+
+// ---------------------------------------------------------------------------
+// Combo A: Bicubic + Selective Bilateral Smoothing
+// ---------------------------------------------------------------------------
+
+/**
+ * Catmull-Rom bicubic, with selective bilateral smoothing near H.264 block
+ * boundaries. Works directly at target resolution (no intermediate 3x step).
+ */
+fun upscaleBicubicBilateral(input: BufferedImage, outW: Int, outH: Int): BufferedImage {
+    val out = createOutput(outW, outH)
+    val sx = input.width.toFloat() / outW
+    val sy = input.height.toFloat() / outH
+    val bilateralSigma = 15f
+
+    for (oy in 0 until outH) {
+        val iy = oy * sy + sy * 0.5f - 0.5f
+        val iy0 = floor(iy).toInt()
+        val fy = iy - iy0
+
+        for (ox in 0 until outW) {
+            val ix = ox * sx + sx * 0.5f - 0.5f
+            val ix0 = floor(ix).toInt()
+            val fx = ix - ix0
+
+            // Standard Catmull-Rom bicubic
+            val bicubic = sampleBicubicCR(input, ix0, iy0, fx, fy)
+
+            // Block boundary detection in input space
+            val dist8x = (ix % 8f).let { min(it, 8f - it) }
+            val dist8y = (iy % 8f).let { min(it, 8f - it) }
+            val dist4x = (ix % 4f).let { min(it, 4f - it) }
+            val dist4y = (iy % 4f).let { min(it, 4f - it) }
+            val nearBound = min(min(dist8x, dist8y), min(dist4x, dist4y))
+
+            if (nearBound < 1.5f) {
+                val centerP = getPixelF(input, ix0, iy0)
+                val cL = luma(centerP[0], centerP[1], centerP[2])
+                val bL = luma(bicubic[0], bicubic[1], bicubic[2])
+
+                val pN = getPixelF(input, ix0, iy0 - 1)
+                val pS = getPixelF(input, ix0, iy0 + 1)
+                val pW = getPixelF(input, ix0 - 1, iy0)
+                val pE = getPixelF(input, ix0 + 1, iy0)
+                val lN = luma(pN[0], pN[1], pN[2])
+                val lS = luma(pS[0], pS[1], pS[2])
+                val lW = luma(pW[0], pW[1], pW[2])
+                val lE = luma(pE[0], pE[1], pE[2])
+
+                val maxStep = max(max(abs(cL - lN), abs(cL - lS)), max(abs(cL - lW), abs(cL - lE)))
+                val neighborVar = (abs(lN - lS) + abs(lW - lE)) * 0.5f
+                val artifactness = maxStep * (1f - (neighborVar / (maxStep * 0.8f + 0.01f)).coerceIn(0f, 1f))
+                val boundProximity = 1f - (nearBound / 1.5f).coerceIn(0f, 1f)
+                val suppressStrength = (artifactness * 3f).coerceIn(0f, 1f) * boundProximity * 0.5f
+
+                if (suppressStrength > 0.01f) {
+                    val smoothed = FloatArray(3)
+                    var wTotal = 0f
+                    for (dy in -1..1) {
+                        for (dx in -1..1) {
+                            val p = getPixelF(input, ix0 + dx, iy0 + dy)
+                            val pL = luma(p[0], p[1], p[2])
+                            val lumaDiff = pL - bL
+                            val spatialW = if (dx == 0 && dy == 0) 1f else if (abs(dx) + abs(dy) == 1) 0.7f else 0.5f
+                            val rangeW = exp(-lumaDiff * lumaDiff * bilateralSigma)
+                            val w = spatialW * rangeW
+                            wTotal += w
+                            smoothed[0] += p[0] * w; smoothed[1] += p[1] * w; smoothed[2] += p[2] * w
+                        }
+                    }
+                    if (wTotal > 0f) { smoothed[0] /= wTotal; smoothed[1] /= wTotal; smoothed[2] /= wTotal }
+                    for (c in 0..2) bicubic[c] = bicubic[c] * (1f - suppressStrength) + smoothed[c] * suppressStrength
+                }
+            }
+
+            out.setRGB(ox, oy, packRgb(bicubic))
+        }
+    }
+    return out
+}
+
+// ---------------------------------------------------------------------------
+// Combo B: Bicubic + Anime4K-style Clamp (local min/max clamping)
+// ---------------------------------------------------------------------------
+
+/**
+ * Catmull-Rom bicubic with local min/max clamping of the 2x2 nearest input
+ * pixels. Prevents ringing from negative lobes, improving SSIM.
+ * Inspired by Anime4K's Clamp_Highlights and FSR EASU's deringing.
+ */
+fun upscaleBicubicClamp(input: BufferedImage, outW: Int, outH: Int): BufferedImage {
+    val out = createOutput(outW, outH)
+    val sx = input.width.toFloat() / outW
+    val sy = input.height.toFloat() / outH
+
+    for (oy in 0 until outH) {
+        val iy = oy * sy + sy * 0.5f - 0.5f
+        val iy0 = floor(iy).toInt()
+        val fy = iy - iy0
+
+        for (ox in 0 until outW) {
+            val ix = ox * sx + sx * 0.5f - 0.5f
+            val ix0 = floor(ix).toInt()
+            val fx = ix - ix0
+
+            // Catmull-Rom bicubic
+            val bicubic = sampleBicubicCR(input, ix0, iy0, fx, fy)
+
+            // Local min/max from the 2x2 cell the point falls in
+            val p00 = getPixelF(input, ix0, iy0)
+            val p10 = getPixelF(input, ix0 + 1, iy0)
+            val p01 = getPixelF(input, ix0, iy0 + 1)
+            val p11 = getPixelF(input, ix0 + 1, iy0 + 1)
+
+            for (c in 0..2) {
+                val lo = min(min(p00[c], p10[c]), min(p01[c], p11[c]))
+                val hi = max(max(p00[c], p10[c]), max(p01[c], p11[c]))
+                bicubic[c] = bicubic[c].coerceIn(lo, hi)
+            }
+
+            out.setRGB(ox, oy, packRgb(bicubic))
+        }
+    }
+    return out
+}
+
+// ---------------------------------------------------------------------------
+// Combo C: Luma-Guided (bicubic/bilinear blend based on local contrast)
+// ---------------------------------------------------------------------------
+
+/**
+ * Blends between bicubic (sharp) and bilinear (smooth) based on local
+ * luminance contrast. Low contrast -> bilinear (better SSIM for flat areas),
+ * high contrast -> bicubic (sharper edges).
+ */
+fun upscaleLumaGuided(input: BufferedImage, outW: Int, outH: Int): BufferedImage {
+    val out = createOutput(outW, outH)
+    val sx = input.width.toFloat() / outW
+    val sy = input.height.toFloat() / outH
+
+    for (oy in 0 until outH) {
+        val iy = oy * sy + sy * 0.5f - 0.5f
+        val iy0 = floor(iy).toInt()
+        val fy = iy - iy0
+
+        for (ox in 0 until outW) {
+            val ix = ox * sx + sx * 0.5f - 0.5f
+            val ix0 = floor(ix).toInt()
+            val fx = ix - ix0
+
+            // Bicubic
+            val bicubic = sampleBicubicCR(input, ix0, iy0, fx, fy)
+
+            // Bilinear
+            val bilinear = sampleBilinear(input, ix, iy)
+
+            // Local contrast from 3x3 neighborhood
+            val centerP = getPixelF(input, ix0, iy0)
+            val centerL = luma(centerP[0], centerP[1], centerP[2])
+            var maxDiff = 0f
+            for (dy in -1..1) {
+                for (dx in -1..1) {
+                    if (dx == 0 && dy == 0) continue
+                    val p = getPixelF(input, ix0 + dx, iy0 + dy)
+                    maxDiff = max(maxDiff, abs(luma(p[0], p[1], p[2]) - centerL))
+                }
+            }
+
+            // Smoothstep: low contrast -> bilinear, high contrast -> bicubic
+            val t = ((maxDiff - 0.03f) / (0.15f - 0.03f)).coerceIn(0f, 1f)
+            val blend = t * t * (3f - 2f * t)
+
+            val rgb = FloatArray(3) { c ->
+                bilinear[c] * (1f - blend) + bicubic[c] * blend
+            }
+            out.setRGB(ox, oy, packRgb(rgb))
+        }
+    }
+    return out
+}
+
+// ---------------------------------------------------------------------------
+// Combo D: Dual-Kernel Blend (Catmull-Rom + Mitchell-Netravali)
+// ---------------------------------------------------------------------------
+
+/**
+ * Blends Catmull-Rom and Mitchell-Netravali based on local variance.
+ * High variance (edges) -> Catmull-Rom, low variance (flat) -> Mitchell.
+ * Mitchell has less ringing, better for smooth regions.
+ */
+fun upscaleDualKernel(input: BufferedImage, outW: Int, outH: Int): BufferedImage {
+    val out = createOutput(outW, outH)
+    val sx = input.width.toFloat() / outW
+    val sy = input.height.toFloat() / outH
+
+    for (oy in 0 until outH) {
+        val iy = oy * sy + sy * 0.5f - 0.5f
+        val iy0 = floor(iy).toInt()
+        val fy = iy - iy0
+
+        for (ox in 0 until outW) {
+            val ix = ox * sx + sx * 0.5f - 0.5f
+            val ix0 = floor(ix).toInt()
+            val fx = ix - ix0
+
+            val catmullRom = FloatArray(3)
+            val mitchell = FloatArray(3)
+            var crTotal = 0f
+            var mnTotal = 0f
+
+            val centerP = getPixelF(input, ix0, iy0)
+            val centerL = luma(centerP[0], centerP[1], centerP[2])
+            var localVariance = 0f
+
+            for (dy in -1..2) {
+                val crWy = catmullRomWeight(fy - dy)
+                val mnWy = mitchellWeight(fy - dy)
+                for (dx in -1..2) {
+                    val crWx = catmullRomWeight(fx - dx)
+                    val mnWx = mitchellWeight(fx - dx)
+                    val crW = crWx * crWy
+                    val mnW = mnWx * mnWy
+                    crTotal += crW
+                    mnTotal += mnW
+                    val p = getPixelF(input, ix0 + dx, iy0 + dy)
+                    catmullRom[0] += p[0] * crW; catmullRom[1] += p[1] * crW; catmullRom[2] += p[2] * crW
+                    mitchell[0] += p[0] * mnW; mitchell[1] += p[1] * mnW; mitchell[2] += p[2] * mnW
+
+                    if (dx in 0..1 && dy in 0..1) {
+                        val l = luma(p[0], p[1], p[2])
+                        val diff = l - centerL
+                        localVariance += diff * diff
+                    }
+                }
+            }
+            if (crTotal > 0f) { catmullRom[0] /= crTotal; catmullRom[1] /= crTotal; catmullRom[2] /= crTotal }
+            if (mnTotal > 0f) { mitchell[0] /= mnTotal; mitchell[1] /= mnTotal; mitchell[2] /= mnTotal }
+            localVariance /= 4f
+
+            val t = ((sqrt(localVariance) - 0.02f) / (0.12f - 0.02f)).coerceIn(0f, 1f)
+            val blend = t * t * (3f - 2f * t)
+
+            val rgb = FloatArray(3) { c ->
+                mitchell[c] * (1f - blend) + catmullRom[c] * blend
+            }
+            out.setRGB(ox, oy, packRgb(rgb))
+        }
+    }
+    return out
+}
+
+// ---------------------------------------------------------------------------
+// Combo E: SSIM-Optimized Bicubic
+// ---------------------------------------------------------------------------
+
+/**
+ * Catmull-Rom bicubic with overshoot correction: where bicubic ringing pushes
+ * values beyond the local 2x2 min/max, blend toward bilinear. This directly
+ * targets SSIM improvement by reducing structural error from negative lobes.
+ */
+fun upscaleSSIMOptimized(input: BufferedImage, outW: Int, outH: Int): BufferedImage {
+    val out = createOutput(outW, outH)
+    val sx = input.width.toFloat() / outW
+    val sy = input.height.toFloat() / outH
+
+    for (oy in 0 until outH) {
+        val iy = oy * sy + sy * 0.5f - 0.5f
+        val iy0 = floor(iy).toInt()
+        val fy = iy - iy0
+
+        for (ox in 0 until outW) {
+            val ix = ox * sx + sx * 0.5f - 0.5f
+            val ix0 = floor(ix).toInt()
+            val fx = ix - ix0
+
+            // Bicubic
+            val bicubic = sampleBicubicCR(input, ix0, iy0, fx, fy)
+
+            // Bilinear
+            val bilinear = sampleBilinear(input, ix, iy)
+
+            // Local min/max from 2x2 cell
+            val p00 = getPixelF(input, ix0, iy0)
+            val p10 = getPixelF(input, ix0 + 1, iy0)
+            val p01 = getPixelF(input, ix0, iy0 + 1)
+            val p11 = getPixelF(input, ix0 + 1, iy0 + 1)
+
+            var overshoot = 0f
+            for (c in 0..2) {
+                val lo = min(min(p00[c], p10[c]), min(p01[c], p11[c]))
+                val hi = max(max(p00[c], p10[c]), max(p01[c], p11[c]))
+                if (bicubic[c] < lo) overshoot += lo - bicubic[c]
+                if (bicubic[c] > hi) overshoot += bicubic[c] - hi
+            }
+
+            // Blend toward bilinear proportionally to overshoot
+            val fallback = (overshoot * 8f).coerceIn(0f, 1f)
+            val rgb = FloatArray(3) { c ->
+                val blended = bicubic[c] * (1f - fallback) + bilinear[c] * fallback
+                // Soft clamp
+                val lo = min(min(p00[c], p10[c]), min(p01[c], p11[c]))
+                val hi = max(max(p00[c], p10[c]), max(p01[c], p11[c]))
+                val margin = (hi - lo) * 0.05f
+                blended.coerceIn(lo - margin, hi + margin)
+            }
+
+            out.setRGB(ox, oy, packRgb(rgb))
+        }
+    }
+    return out
 }

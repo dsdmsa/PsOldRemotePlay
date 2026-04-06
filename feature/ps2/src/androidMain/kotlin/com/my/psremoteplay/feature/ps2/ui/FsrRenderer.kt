@@ -264,6 +264,8 @@ class FsrRenderer(
         UpscaleMethod.DECOMPOSE_RECOMPOSE -> DecomposeRecomposeStrategy()
         UpscaleMethod.OPTIMAL -> OptimalUpscaleStrategy()
         UpscaleMethod.FIXED_3X -> Fixed3xBicubicStrategy()
+        UpscaleMethod.DUAL_KERNEL -> DualKernelStrategy()
+        UpscaleMethod.LUMA_GUIDED -> LumaGuidedStrategy()
         else -> null
     }
 
